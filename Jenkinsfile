@@ -1,8 +1,5 @@
 pipeline {
     agent any
-    tools {
-        nodejs 'NODE_20'
-    }
     stages {
         // stage('Debug SSH') {
         //     steps {
@@ -71,24 +68,31 @@ pipeline {
             steps {
                 script {
                     repos.each { repo ->
-                        dir(repo.folder) {
-                            sh """
-                                echo "=== Preparing to build ${repo.folder} ==="
-                                if [ -f package.json ]; then
-                                    echo "Installing dependencies..."
-                                    export CI=true
-                                    npm ci
-                                    echo "Building project..."
-                                    npm run nextbuild
-                                else
-                                    echo "No package.json found in ${repo.folder}, skipping npm build."
-                                fi
-                            """
+                        echo "=== Starting build for ${repo.folder} ==="
+
+                        node {
+                            docker.image('node:20-bullseye').inside('-u node') {
+                                dir(repo.folder) {
+                                    sh """
+                                        if [ -f package.json ]; then
+                                            export CI=true
+                                            npm ci
+                                            npm run nextbuild
+                                        else
+                                            echo "No package.json found, skipping build."
+                                        fi
+                                    """
+                                }
+                            }
                         }
+
+                        echo "=== Finished build for ${repo.folder} ==="
                     }
                 }
             }
         }
+
+
 
         // stage('Deploy to VPS') {
         //     // steps {
