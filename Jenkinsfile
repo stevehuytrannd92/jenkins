@@ -76,9 +76,17 @@ pipeline {
                     repos.each { repo ->
                         dir(repo.folder) {
                             sh """
-                                echo "=== Building ${repo.folder} ==="
-                                npm ci
-                                npm run build
+                                echo "=== Preparing to build ${repo.folder} ==="
+                                
+                                if [ -f package.json ]; then
+                                    echo "Installing dependencies..."
+                                    export CI=true
+                                    npm ci
+                                    echo "Building project..."
+                                    npm run nextbuild
+                                else
+                                    echo "No package.json found in ${repo.folder}, skipping npm build."
+                                fi
                             """
                         }
                     }
