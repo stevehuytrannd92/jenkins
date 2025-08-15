@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    tools {
+        nodejs 'Node_20' // NodeJS installation configured in Jenkins global tools
+    }
+
     stages {
         // stage('Debug SSH') {
         //     steps {
@@ -68,38 +72,25 @@ pipeline {
 
 
         stage('Build Projects') {
-            agent {
-                docker {
-                    image 'node:20-bullseye'
-                    args '-u node'
-                }
-            }
             steps {
                 script {
                     repos.each { repo ->
-                        echo "=== Starting build for ${repo.folder} ==="
-
-                        node {
-                            docker.image('node:20-bullseye').inside('-u node') {
-                                dir(repo.folder) {
-                                    sh """
-                                        if [ -f package.json ]; then
-                                            export CI=true
-                                            npm ci
-                                            npm run nextbuild
-                                        else
-                                            echo "No package.json found, skipping build."
-                                        fi
-                                    """
-                                }
-                            }
+                        dir(repo.folder) {
+                            sh '''
+                                if [ -f package.json ]; then
+                                    export CI=true
+                                    npm ci
+                                    npm run nextbuild
+                                else
+                                    echo "No package.json found, skipping build."
+                                fi
+                            '''
                         }
-
-                        echo "=== Finished build for ${repo.folder} ==="
                     }
                 }
             }
         }
+
 
 
 
