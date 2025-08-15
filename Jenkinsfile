@@ -76,25 +76,37 @@ pipeline {
                 script {
                     repos.each { repo ->
                         dir(repo.folder) {
-                            sh '''
-                                if [ -f package.json ]; then
-                                    export CI=true
-                                    npm ci
-                                    npm run nextbuild
-                                else
-                                    echo "No package.json found, skipping build."
-                                fi
-                            '''
+                            repo.envs.each { env ->
+                                echo "=== Building ${repo.folder} branch ${repo.branch} for environment ${env.name} ==="
 
-                            // Verify the "out" folder has files
-                            sh '''
-                                if [ -d out ] && [ "$(ls -A out)" ]; then
-                                    echo "✅ Build output exists in out/ for ${repo.folder}"
-                                else
-                                    echo "❌ ERROR: out/ folder is missing or empty in ${repo.folder}"
-                                    exit 1
-                                fi
-                            '''
+                                // Build once (all envs use same build) or repeat if needed
+                                sh '''
+                                    if [ -f package.json ]; then
+                                        export CI=true
+                                        npm ci
+                                        npm run nextbuild
+                                    else
+                                        echo "No package.json found, skipping build."
+                                    fi
+                                '''
+
+                                // Copy out folder to environment-specific folder
+                                def envOut = "outs/${env.name}"
+                                sh """
+                                    rm -rf ${envOut}
+                                    cp -r out ${envOut}
+                                """
+
+                                // Verify
+                                sh """
+                                    if [ -d ${envOut} ] && [ "\$(ls -A ${envOut})" ]; then
+                                        echo "✅ Build output exists for ${repo.folder}/${env.name}"
+                                    else
+                                        echo "❌ ERROR: ${envOut} missing or empty for ${repo.folder}"
+                                        exit 1
+                                    fi
+                                """
+                            }
                         }
                     }
                 }
