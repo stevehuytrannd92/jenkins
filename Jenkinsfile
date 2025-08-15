@@ -91,10 +91,15 @@ pipeline {
                                 '''
 
                                 // Copy out folder to environment-specific folder
-                                def envOut = "outs/${env.name}"
+                                def envOut = "out/${env.name}"
                                 sh """
-                                    rm -rf ${envOut}
-                                    cp -r out ${envOut}
+                                    # Remove previous output folder if exists (safe even if missing)
+                                    if [ -d ${envOut} ]; then
+                                        rm -rf ${envOut}
+                                    fi
+
+                                    # Copy build output
+                                    cp -r out ${envOut} || echo "⚠️ Warning: 'out' folder missing, copy skipped"
                                 """
 
                                 // Verify
