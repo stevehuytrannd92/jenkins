@@ -5,6 +5,7 @@ pipeline {
             steps {
                 sshagent(credentials: ['id_ed25519_stevehuytrannd92']) {
                     sh '''
+                        set -e
                         echo "Testing SSH..."
                         ssh -vT git@github.com
                         env | grep SSH_AUTH_SOCK
