@@ -6,7 +6,7 @@ pipeline {
                 sshagent(credentials: ['id_ed25519_stevehuytrannd92']) {
                     sh 'env | grep SSH'
                     sh 'ssh-add -l'
-                    sh 'ssh -vvvT git@github.com'
+                    sh 'ssh -vT git@github.com'
                 }
             }
         }
