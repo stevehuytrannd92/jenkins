@@ -4,7 +4,7 @@ pipeline {
         stage('Test SSH') {
             steps {
                 sshagent(credentials: ['id_ed25519_stevehuytrannd92']) {
-                    sh 'ssh -T git@github.com || true'
+                    sh 'ssh -vT git@github.com || true'
                 }
             }
         }
