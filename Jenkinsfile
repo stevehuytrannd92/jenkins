@@ -91,7 +91,7 @@ pipeline {
                                 '''
 
                                 // Copy out folder to environment-specific folder
-                                def envOut = "out/${env.name}"
+                                def envOut = "outs/${env.name}"
                                 sh """
                                     # Remove previous output folder if exists (safe even if missing)
                                     if [ -d ${envOut} ]; then

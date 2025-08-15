@@ -8,13 +8,23 @@ return [
         envs: [
             [ 
                 name: 'maxidoge', 
-                deployTarget: 'dev-server',
-                extraParam: 'value1'
+                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
+                LOGO_PATH:'/img/maxidoge/logo.svg',
+                MAIN_DOMAIN:'https://maxidoge.io',
+                MAIN_GTAG:'G-BS0FWQNNNZ',
+                MAIN_SITENAME:'maxidoge',
+                MAIN_TWITTER:'@maxidoge'
+                OG_PATH:'/img/maxidoge/OG.jpeg'
             ],
-             [ 
+            [ 
                 name: 'maxidogecoin', 
-                deployTarget: 'dev-server',
-                extraParam: 'value1'
+                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
+                LOGO_PATH:'/img/maxidoge/logo.svg',
+                MAIN_DOMAIN:'https://maxidogecoin.com',
+                MAIN_GTAG:'G-BS0FWQNNNZ',
+                MAIN_SITENAME:'maxidoge',
+                MAIN_TWITTER:'@maxidoge'
+                OG_PATH:'/img/maxidoge/OG.jpeg'
             ]
         ]
 
