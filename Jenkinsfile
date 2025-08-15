@@ -44,21 +44,21 @@ pipeline {
             }
         }
 
-        stage('Deploy to VPS') {
-            // steps {
-            //     script {
-            //         repos.each { repo ->
-            //             dir(repo.folder) {
-            //                 sshagent (credentials: ['vps-ssh-key']) {
-            //                     sh """
-            //                         echo "Deploying ${repo.folder}..."
-            //                         scp -r ./build user@vps:/var/www/${repo.folder}
-            //                     """
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
-        }
+        // stage('Deploy to VPS') {
+        //     // steps {
+        //     //     script {
+        //     //         repos.each { repo ->
+        //     //             dir(repo.folder) {
+        //     //                 sshagent (credentials: ['vps-ssh-key']) {
+        //     //                     sh """
+        //     //                         echo "Deploying ${repo.folder}..."
+        //     //                         scp -r ./build user@vps:/var/www/${repo.folder}
+        //     //                     """
+        //     //                 }
+        //     //             }
+        //     //         }
+        //     //     }
+        //     // }
+        // }
     }
 }
