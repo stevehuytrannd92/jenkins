@@ -1,7 +1,16 @@
-def repos = load "repos.groovy"
-
 pipeline {
     agent any
+    stages  {
+        stage('Load Script') {
+            steps {
+                script {
+                    // The 'load' step is placed inside a 'script' block within a 'steps' block,
+                    // which is implicitly within the agent's context.
+                    repos = load 'repos.groovy'
+                }
+            }
+        }
+    }
 
     stages {
         stage('Clone Repos') {
