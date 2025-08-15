@@ -1,10 +1,5 @@
-mkdir -p ~/jenkins_home
-docker run -d \
-    --name jenkins-sandbox \
-    -p 12000:8080 \
-    -p 12001:50000 \
-    -v ~/jenkins_home:/var/jenkins_home \
-    jenkins/jenkins:lts
+docker volume create jenkins_home
+docker run -d --name jenkins-sandbox -p 12000:8080 -p 12001:50000 -v jenkins_home:/var/jenkins_home jenkins/jenkins:lts
 
 docker exec jenkins-sandbox cat /var/jenkins_home/secrets/initialAdminPassword
 
