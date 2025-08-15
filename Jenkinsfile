@@ -1,6 +1,14 @@
 pipeline {
     agent any
     stages {
+        stage('Test SSH') {
+            steps {
+                sshagent(credentials: ['id_ed25519_stevehuytrannd92']) {
+                    sh 'ssh -T git@github.com || true'
+                }
+            }
+        }
+
         stage('Load Script') {
             steps {
                 script {
