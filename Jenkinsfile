@@ -77,7 +77,9 @@ pipeline {
                         dir(repo.folder) {
                             sh """
                                 echo "=== Preparing to build ${repo.folder} ==="
-                                
+                                sh "pwd"
+                                sh "ls -R"
+
                                 if [ -f package.json ]; then
                                     echo "Installing dependencies..."
                                     export CI=true
