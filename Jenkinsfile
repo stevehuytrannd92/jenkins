@@ -94,7 +94,8 @@ pipeline {
                                     // Copy out folder to environment-specific folder
                                     def envOut = "outs/${env.name}"
                                     sh """
-                                        mkdir -p $(dirname ${envOut})
+                                        # Ensure parent folder exists
+                                        mkdir -p outs
                                         
                                         # Remove previous output folder if exists (safe even if missing)
                                         if [ -d ${envOut} ]; then
