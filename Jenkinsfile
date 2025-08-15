@@ -1,6 +1,6 @@
 pipeline {
     agent any
-    stages  {
+    stages {
         stage('Load Script') {
             steps {
                 script {
@@ -10,9 +10,7 @@ pipeline {
                 }
             }
         }
-    }
 
-    stages {
         stage('Clone Repos') {
             steps {
                 script {
