@@ -13,7 +13,7 @@ return [
                 MAIN_DOMAIN:'https://maxidoge.io',
                 MAIN_GTAG:'G-BS0FWQNNNZ',
                 MAIN_SITENAME:'maxidoge',
-                MAIN_TWITTER:'@maxidoge'
+                MAIN_TWITTER:'@maxidoge',
                 OG_PATH:'/img/maxidoge/OG.jpeg'
             ],
             [ 
@@ -23,7 +23,7 @@ return [
                 MAIN_DOMAIN:'https://maxidogecoin.com',
                 MAIN_GTAG:'G-BS0FWQNNNZ',
                 MAIN_SITENAME:'maxidoge',
-                MAIN_TWITTER:'@maxidoge'
+                MAIN_TWITTER:'@maxidoge',
                 OG_PATH:'/img/maxidoge/OG.jpeg'
             ]
         ]
