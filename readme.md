@@ -12,3 +12,8 @@ jenkins-plugin-cli --plugins \
     github-branch-source \
     ssh-agent \
     publish-over-ssh
+
+
+
+docker exec -it jenkins-sandbox bash
+ssh -vT git@github.com
