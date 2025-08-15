@@ -41,9 +41,6 @@ pipeline {
                                     $class: 'GitSCM',
                                     branches: [[name: "*/${repo.branch}"]],
                                     doGenerateSubmoduleConfigurations: false,
-                                    extensions: [
-                                        [$class: 'RelativeTargetDirectory', relativeTargetDir: repo.folder]
-                                    ],
                                     userRemoteConfigs: [[
                                         url: repo.url,
                                         credentialsId: repo.credId
@@ -77,9 +74,6 @@ pipeline {
                         dir(repo.folder) {
                             sh """
                                 echo "=== Preparing to build ${repo.folder} ==="
-                                sh "pwd"
-                                sh "ls -R"
-
                                 if [ -f package.json ]; then
                                     echo "Installing dependencies..."
                                     export CI=true
