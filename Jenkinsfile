@@ -79,38 +79,43 @@ pipeline {
                             repo.envs.each { env ->
                                 echo "=== Building ${repo.folder} branch ${repo.branch} for environment ${env.name} ==="
 
-                                // Build once (all envs use same build) or repeat if needed
-                                sh '''
-                                    if [ -f package.json ]; then
-                                        export CI=true
-                                        npm ci
-                                        npm run nextbuild
-                                    else
-                                        echo "No package.json found, skipping build."
-                                    fi
-                                '''
+                                withEnv(env.collect { k,v -> "${k.toUpperCase()}=${v}" } ) {
+                                    // Build once (all envs use same build) or repeat if needed
+                                    sh '''
+                                        if [ -f package.json ]; then
+                                            export CI=true
+                                            npm ci
+                                            npm run nextbuild
+                                        else
+                                            echo "No package.json found, skipping build."
+                                        fi
+                                    '''
 
-                                // Copy out folder to environment-specific folder
-                                def envOut = "outs/${env.name}"
-                                sh """
-                                    # Remove previous output folder if exists (safe even if missing)
-                                    if [ -d ${envOut} ]; then
-                                        rm -rf ${envOut}
-                                    fi
+                                    // Copy out folder to environment-specific folder
+                                    def envOut = "outs/${env.name}"
+                                    sh """
+                                        # Remove previous output folder if exists (safe even if missing)
+                                        if [ -d ${envOut} ]; then
+                                            rm -rf ${envOut}
+                                        fi
 
-                                    # Copy build output
-                                    cp -r out ${envOut} || echo "⚠️ Warning: 'out' folder missing, copy skipped"
-                                """
+                                        # Copy build output
+                                        cp -r out ${envOut} || echo "⚠️ Warning: 'out' folder missing, copy skipped"
+                                    """
 
-                                // Verify
-                                sh """
-                                    if [ -d ${envOut} ] && [ "\$(ls -A ${envOut})" ]; then
-                                        echo "✅ Build output exists for ${repo.folder}/${env.name}"
-                                    else
-                                        echo "❌ ERROR: ${envOut} missing or empty for ${repo.folder}"
-                                        exit 1
-                                    fi
-                                """
+                                    // Verify
+                                    sh """
+                                        if [ -d ${envOut} ] && [ "\$(ls -A ${envOut})" ]; then
+                                            echo "✅ Build output exists for ${repo.folder}/${env.name}"
+                                        else
+                                            echo "❌ ERROR: ${envOut} missing or empty for ${repo.folder}"
+                                            exit 1
+                                        fi
+                                    """
+                                }
+
+
+                                
                             }
                         }
                     }
