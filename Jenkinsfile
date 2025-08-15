@@ -1,20 +1,23 @@
 pipeline {
     agent any
+    tools {
+        nodejs 'NODE_20'
+    }
     stages {
-        stage('Debug SSH') {
-            steps {
-                sshagent(credentials: ['id_ed25519_stevehuytrannd92']) {
-                    sh '''
-                        set +e  # don't exit on non-zero
-                        echo "Testing SSH..."
-                        ssh -vT git@github.com
-                        env | grep SSH_AUTH_SOCK
-                        echo "SSH authentication to GitHub succeeded."
+        // stage('Debug SSH') {
+        //     steps {
+        //         sshagent(credentials: ['id_ed25519_stevehuytrannd92']) {
+        //             sh '''
+        //                 set +e  # don't exit on non-zero
+        //                 echo "Testing SSH..."
+        //                 ssh -vT git@github.com
+        //                 env | grep SSH_AUTH_SOCK
+        //                 echo "SSH authentication to GitHub succeeded."
 
-                    '''
-                }
-            }
-        }
+        //             '''
+        //         }
+        //     }
+        // }
 
 
         stage('Load Script') {
