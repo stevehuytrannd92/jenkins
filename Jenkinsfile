@@ -4,10 +4,13 @@ pipeline {
         stage('Test SSH') {
             steps {
                 sshagent(credentials: ['id_ed25519_stevehuytrannd92']) {
-                    sh 'ssh -vT git@github.com || true'
+                    sh 'env | grep SSH'
+                    sh 'ssh-add -l'
+                    sh 'ssh -vvvT git@github.com'
                 }
             }
         }
+
 
         stage('Load Script') {
             steps {
