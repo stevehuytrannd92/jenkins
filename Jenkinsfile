@@ -68,6 +68,12 @@ pipeline {
 
 
         stage('Build Projects') {
+            agent {
+                docker {
+                    image 'node:20-bullseye'
+                    args '-u node'
+                }
+            }
             steps {
                 script {
                     repos.each { repo ->
