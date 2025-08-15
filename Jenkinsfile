@@ -85,14 +85,14 @@ pipeline {
                                         if [ -f package.json ]; then
                                             export CI=true
                                             npm ci
-                                            npm run nextbuild
+                                            npm run jenkinsbuild
                                         else
                                             echo "No package.json found, skipping build."
                                         fi
                                     '''
 
                                     // Copy out folder to environment-specific folder
-                                    def envOut = "out/${env.name}"
+                                    def envOut = "outs/${env.name}"
                                     sh """
                                         # Remove previous output folder if exists (safe even if missing)
                                         if [ -d ${envOut} ]; then
