@@ -85,6 +85,16 @@ pipeline {
                                     echo "No package.json found, skipping build."
                                 fi
                             '''
+
+                            // Verify the "out" folder has files
+                            sh '''
+                                if [ -d out ] && [ "$(ls -A out)" ]; then
+                                    echo "✅ Build output exists in out/ for ${repo.folder}"
+                                else
+                                    echo "❌ ERROR: out/ folder is missing or empty in ${repo.folder}"
+                                    exit 1
+                                fi
+                            '''
                         }
                     }
                 }

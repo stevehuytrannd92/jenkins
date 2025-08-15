@@ -19,6 +19,23 @@ docker exec -it jenkins-sandbox bash
 ssh -vT git@github.com
 
 
+docker exec -it  -u  jenkins jenkins-sandbox bash
+which npm
+# or
+echo $PATH
+
+
+fix the node-gyp
+docker exec -it -u root jenkins-sandbox bash
+
+# Inside Jenkins container
+apt-get update
+apt-get install -y python3 build-essential
+npm config set python $(which python3)
+
+
+
+
 check ssh key pass:
 ssh-keygen -y -f /Users/steve/.ssh/id_ed25519_stevehuytrannd92
 
