@@ -1,16 +1,9 @@
+def repos = load "repos.groovy"
+
 pipeline {
     agent any
 
     stages {
-        stage('Load Repo Config') {
-            steps {
-                script {
-                    // Load repos from file
-                    repos = load 'repos.groovy'
-                }
-            }
-        }
-
         stage('Clone Repos') {
             steps {
                 script {
@@ -20,7 +13,10 @@ pipeline {
                                 $class: 'GitSCM',
                                 branches: [[name: "*/${repo.branch}"]],
                                 doGenerateSubmoduleConfigurations: false,
-                                extensions: [[$class: 'CleanBeforeCheckout']],
+                                extensions: [
+                                    [$class: 'CleanBeforeCheckout'],
+                                    [$class: 'RelativeTargetDirectory', relativeTargetDir: repo.folder]
+                                ],
                                 userRemoteConfigs: [[
                                     url: repo.url,
                                     credentialsId: repo.credId
@@ -37,9 +33,11 @@ pipeline {
                 script {
                     repos.each { repo ->
                         dir(repo.folder) {
-                            sh "echo Building ${repo.folder}..."
-                            // Replace this with your actual build command
-                            sh "npm install && npm run build"
+                            sh """
+                                echo "=== Building ${repo.folder} ==="
+                                npm ci
+                                npm run build
+                            """
                         }
                     }
                 }
@@ -47,18 +45,20 @@ pipeline {
         }
 
         stage('Deploy to VPS') {
-            steps {
-                // script {
-                //     repos.each { repo ->
-                //         dir(repo.folder) {
-                //             // Example deployment via SSH
-                //             sshagent (credentials: ['vps-ssh-key']) {
-                //                 sh "scp -r ./build user@vps:/var/www/${repo.folder}"
-                //             }
-                //         }
-                //     }
-                // }
-            }
+            // steps {
+            //     script {
+            //         repos.each { repo ->
+            //             dir(repo.folder) {
+            //                 sshagent (credentials: ['vps-ssh-key']) {
+            //                     sh """
+            //                         echo "Deploying ${repo.folder}..."
+            //                         scp -r ./build user@vps:/var/www/${repo.folder}
+            //                     """
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
         }
     }
 }
