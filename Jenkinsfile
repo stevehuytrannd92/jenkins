@@ -9,6 +9,8 @@ pipeline {
                         echo "Testing SSH..."
                         ssh -vT git@github.com
                         env | grep SSH_AUTH_SOCK
+                        echo "SSH authentication to GitHub succeeded."
+
                     '''
                 }
             }
