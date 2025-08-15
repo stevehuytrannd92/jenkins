@@ -27,29 +27,45 @@ pipeline {
             }
         }
 
-        stage('Clone Repos') {
+        stage('Repos Pulls') {
             steps {
                 script {
                     repos.each { repo ->
                         dir(repo.folder) {
-                            checkout([
-                                $class: 'GitSCM',
-                                branches: [[name: "*/${repo.branch}"]],
-                                doGenerateSubmoduleConfigurations: false,
-                                extensions: [
-                                    [$class: 'CleanBeforeCheckout'],
-                                    [$class: 'RelativeTargetDirectory', relativeTargetDir: repo.folder]
-                                ],
-                                userRemoteConfigs: [[
-                                    url: repo.url,
-                                    credentialsId: repo.credId
-                                ]]
-                            ])
+                            if (!fileExists('.git')) {
+                                // First time clone
+                                checkout([
+                                    $class: 'GitSCM',
+                                    branches: [[name: "*/${repo.branch}"]],
+                                    doGenerateSubmoduleConfigurations: false,
+                                    extensions: [
+                                        [$class: 'RelativeTargetDirectory', relativeTargetDir: repo.folder]
+                                    ],
+                                    userRemoteConfigs: [[
+                                        url: repo.url,
+                                        credentialsId: repo.credId
+                                    ]]
+                                ])
+                            } else {
+                                // Fetch and compare
+                                sh """
+                                    git fetch origin ${repo.branch}
+                                    LOCAL_HASH=\$(git rev-parse HEAD)
+                                    REMOTE_HASH=\$(git rev-parse FETCH_HEAD)
+                                    if [ "\$LOCAL_HASH" != "\$REMOTE_HASH" ]; then
+                                        echo "New changes found for ${repo.folder}, pulling..."
+                                        git merge FETCH_HEAD
+                                    else
+                                        echo "No changes for ${repo.folder}, skipping pull."
+                                    fi
+                                """
+                            }
                         }
                     }
                 }
             }
         }
+
 
         stage('Build Projects') {
             steps {
