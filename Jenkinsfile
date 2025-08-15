@@ -77,7 +77,7 @@ pipeline {
                     repos.each { repo ->
                         dir(repo.folder) {
                             repo.envs.each { env ->
-                                echo "=== Building ${repo.folder} branch ${repo.branch} for environment ${env.name} ==="
+                                echo "=== Building ${repo.folder} branch >>${repo.branch}<< for environment: ${env.name} ==="
 
                                 withEnv(env.collect { k,v -> "${k.toUpperCase()}=${v}" } ) {
                                     // Build once (all envs use same build) or repeat if needed
