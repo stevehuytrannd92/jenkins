@@ -1,7 +1,7 @@
 pipeline {
     agent any
     tools {
-        nodejs 'Node_20' // NodeJS installation configured in Jenkins global tools
+        nodejs 'NODE_20' // NodeJS installation configured in Jenkins global tools
     }
 
     stages {
