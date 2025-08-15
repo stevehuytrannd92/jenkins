@@ -85,7 +85,7 @@ pipeline {
                                         if [ -f package.json ]; then
                                             export CI=true
                                             npm ci
-                                            next build && npx next-sitemap
+                                            npx next build && npx next-sitemap
                                         else
                                             echo "No package.json found, skipping build."
                                         fi
