@@ -45,17 +45,20 @@ pipeline {
                                 ])
                             } else {
                                 // Fetch and compare
-                                sh """
-                                    git fetch origin ${repo.branch}
-                                    LOCAL_HASH=\$(git rev-parse HEAD)
-                                    REMOTE_HASH=\$(git rev-parse FETCH_HEAD)
-                                    if [ "\$LOCAL_HASH" != "\$REMOTE_HASH" ]; then
-                                        echo "New changes found for ${repo.folder}, pulling..."
-                                        git merge FETCH_HEAD
-                                    else
-                                        echo "No changes for ${repo.folder}, skipping pull."
-                                    fi
-                                """
+                                checkout([
+                                    $class: 'GitSCM',
+                                    branches: [[name: "*/${repo.branch}"]],
+                                    doGenerateSubmoduleConfigurations: false,
+                                    userRemoteConfigs: [[
+                                        url: repo.url,
+                                        credentialsId: repo.credId
+                                    ]],
+                                    extensions: [
+                                        [$class: 'WipeWorkspace'],        // optional: clean workspace if needed
+                                        [$class: 'PruneStaleBranch'],     // remove stale branches
+                                        [$class: 'CleanBeforeCheckout']   // optional: ensure clean state
+                                    ]
+                                ])
                             }
                         }
                     }
