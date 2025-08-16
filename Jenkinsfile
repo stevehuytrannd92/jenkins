@@ -57,10 +57,15 @@ pipeline {
                                 writeFile(file: tmpConfigFile, text: nginxConfig)
                                 echo "✅ Generated Nginx config for ${env.name} locally: ${tmpConfigFile}"
 
+                                // Print content locally
+                                echo "📄 Local nginx config content for ${env.name}:\n${nginxConfig}"
+
                                 sshagent(credentials: [repo.vpsCredId]) {
                                     sh """
                                         scp ${tmpConfigFile} ${vpsUser}@${vpsHost}:/etc/nginx/sites-available/${tmpConfigFile}
+                                        echo "📡 Remote nginx config content for ${env.name}:"
                                         ssh ${vpsUser}@${vpsHost} 'cat /etc/nginx/sites-available/${tmpConfigFile}'
+
                                     """
                                 }
                             }
