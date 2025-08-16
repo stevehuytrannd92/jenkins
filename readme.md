@@ -47,3 +47,13 @@ ssh-keygen -p \
 
 ssh ${vpsUser}@${vpsHost} 'ln -sf /etc/nginx/sites-available/${tmpConfigFile} /etc/nginx/sites-enabled/${tmpConfigFile}'
 ssh ${vpsUser}@${vpsHost} 'nginx -t && systemctl reload nginx'
+
+
+ssh -i keys/Test123.pem ubuntu@165.154.235.205
+
+ssh -i keys/Test123.pem root@165.154.235.205
+
+
+
+sudo certbot certonly --webroot -w /var/www/presale/btcswifts -d btcswifts.com -d www.btcswifts.com
+
