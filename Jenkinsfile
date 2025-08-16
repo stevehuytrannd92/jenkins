@@ -27,6 +27,7 @@ pipeline {
                     // The 'load' step is placed inside a 'script' block within a 'steps' block,
                     // which is implicitly within the agent's context.
                     repos = load 'repos.groovy'
+                    ngnixTemplate = readFile('ngnix/nginx.template.conf')
                 }
             }
         }
@@ -37,14 +38,13 @@ pipeline {
                 script {
                     repos.each { repo ->
                         dir(repo.folder) {
-                            def template = readFile('ngnix/nginx.template.conf')
 
                             repo.envs.each { env ->
                                 def domain = env.MAIN_DOMAIN.replaceAll(/^https?:\/\//, '').replaceAll(/\/$/, '')
                                 def tmpConfigFile = "${env.name}.conf"
 
                                 // Replace placeholders
-                                def nginxConfig = template
+                                def nginxConfig = ngnixTemplate
                                     .replace('{{DOMAIN}}', domain)
                                     .replace('{{ENV_NAME}}', env.name)
 
