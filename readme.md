@@ -42,3 +42,8 @@ ssh-keygen -p \
   -f keys/id_ed25519_stevehuytrannd92 \
   -N "" \
   -P "123456"
+
+
+
+ssh ${vpsUser}@${vpsHost} 'ln -sf /etc/nginx/sites-available/${tmpConfigFile} /etc/nginx/sites-enabled/${tmpConfigFile}'
+ssh ${vpsUser}@${vpsHost} 'nginx -t && systemctl reload nginx'

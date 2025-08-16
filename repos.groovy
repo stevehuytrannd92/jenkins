@@ -34,6 +34,7 @@ return [
         branch: 'btcswift',
         folder: 'btcswift',
         credId: 'id_ed25519_stevehuytrannd92',
+        vpsCredId: 'vps1',
         envs: [
             [ 
                 name: 'btcswifts', 
