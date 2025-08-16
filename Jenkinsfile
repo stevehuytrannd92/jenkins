@@ -31,6 +31,35 @@ pipeline {
             }
         }
 
+
+        stage('Generate NGNIX config') {
+            steps {
+                script {
+                    repos.each { repo ->
+                        dir(repo.folder) {
+                            def template = readFile('ngnix/nginx.template.conf')
+
+                            repo.envs.each { env ->
+                                def domain = env.MAIN_DOMAIN.replaceAll(/^https?:\/\//, '').replaceAll(/\/$/, '')
+                                def tmpConfigFile = "${env.name}.conf"
+
+                                // Replace placeholders
+                                def nginxConfig = template
+                                    .replace('{{DOMAIN}}', domain)
+                                    .replace('{{ENV_NAME}}', env.name)
+
+                                // Write locally
+                                writeFile(file: tmpConfigFile, text: nginxConfig)
+                                echo "✅ Generated Nginx config for ${env.name} locally: ${tmpConfigFile}"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+
         stage('Repos Pulls') {
             steps {
                 script {
@@ -127,33 +156,7 @@ pipeline {
         }
 
 
-        stage('Generate NGNIX config') {
-            steps {
-                script {
-                    repos.each { repo ->
-                        dir(repo.folder) {
-                            def template = readFile('ngnix/nginx.template.conf')
-
-                            repo.envs.each { env ->
-                                def domain = env.MAIN_DOMAIN.replaceAll(/^https?:\/\//, '').replaceAll(/\/$/, '')
-                                def tmpConfigFile = "${env.name}.conf"
-
-                                // Replace placeholders
-                                def nginxConfig = template
-                                    .replace('{{DOMAIN}}', domain)
-                                    .replace('{{ENV_NAME}}', env.name)
-
-                                // Write locally
-                                writeFile(file: tmpConfigFile, text: nginxConfig)
-                                echo "✅ Generated Nginx config for ${env.name} locally: ${tmpConfigFile}"
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-
+     
 
 
 
