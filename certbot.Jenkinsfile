@@ -28,11 +28,11 @@ pipeline {
                                 .replaceAll('/','')
                                 .replaceAll('^www\\.', '')   // strip www
 
-                            sshagent (credentials: [repo.vpsCredId]) {
+                            sshagent (credentials: [vpsInfo.vpsCredId]) {
 
                                 def exists = sh(
                                     script: """
-                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \
+                                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} \
                                         "sudo test -f /etc/letsencrypt/live/${domain}/fullchain.pem && echo yes || echo no"
                                     """,
                                     returnStdout: true
@@ -41,7 +41,7 @@ pipeline {
                                 if (exists == "yes") {
                                     echo "🔑 Certificate already exists for ${domain}"
                                     // mark VPS for renew later
-                                    def key = "${repo.vpsHost}:${repo.vpsUser}:${repo.vpsCredId}"
+                                    def key = "${vpsInfo.vpsHost}:${vpsInfo.vpsUser}:${vpsInfo.vpsCredId}"
                                     if (!vpsMap.containsKey(key)) {
                                         vpsMap[key] = [needsRenew: false]
                                     }
@@ -63,23 +63,23 @@ pipeline {
 
                                     sh """
                                         # Upload config
-                                        scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${repo.vpsUser}@${repo.vpsHost}:/home/${repo.vpsUser}/${tmpConfigFile}
+                                        scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${vpsInfo.vpsUser}@${vpsInfo.vpsHost}:/home/${repo.vpsUser}/${tmpConfigFile}
 
                                         # Move config into sites-available & enable
-                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} "
-                                            sudo mv /home/${repo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
+                                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "
+                                            sudo mv /home/${vpsInfo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
                                             sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile} &&
                                             sudo ln -sf /etc/nginx/sites-available/${tmpConfigFile} /etc/nginx/sites-enabled/${tmpConfigFile} &&
                                             sudo nginx -t &&
                                             sudo systemctl reload nginx
                                         "
                                         # Verify deployed config
-                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} "cat /etc/nginx/sites-available/${tmpConfigFile}"
+                                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "cat /etc/nginx/sites-available/${tmpConfigFile}"
                                     """
 
                                     // Ensure webroot folder and issue new cert
                                     sh """
-                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
+                                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} \\
                                         "sudo mkdir -p ${repo.webrootBase}/${site.name}/.well-known/acme-challenge && \\
                                          sudo chown -R www-data:www-data ${repo.webrootBase}/${site.name} && \\
                                          sudo nginx -t && \\
