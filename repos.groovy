@@ -100,11 +100,28 @@ return [
         ]
 
     ],
-    // [
-    //     url: 'git@github.com:stevehuytrannd92/flockerz.git',
-    //     branch: 'btchyper',
-    //     folder: 'btchyper',
-    //     credId: 'id_ed25519_stevehuytrannd92'
-    // ],
+    [
+        url: 'git@github.com:stevehuytrannd92/flockerz.git',
+        branch: 'btchyper',
+        folder: 'btchyper',
+        credId: 'id_ed25519_stevehuytrannd92',
+        vpsCredId: 'vps1',
+        vpsUser: 'ubuntu',
+        vpsHost: '165.154.235.205',
+        webrootBase: '/var/www/presale',
+        envs: [
+            [ 
+                name: 'btchyper', 
+                MAIN_DOMAIN:'https://btchyper.io/',
+                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
+                LOGO_PATH:'/img/btchyper/token.svg',
+                MAIN_GTAG:'G-RKFMME3BTM',
+                MAIN_SITENAME:'btchyper',
+                MAIN_TWITTER:'@btchyper',
+                OG_PATH:'/img/btchyper/OG.jpeg'
+            ],
+        ]
+
+    ],
     
 ]
