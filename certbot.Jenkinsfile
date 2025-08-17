@@ -14,9 +14,10 @@ pipeline {
         stage('Handle Certificates') {
             steps {
                 script {
-                    repos.each { repo ->
-                        boolean needsRenew = false
+                    // Collect VPS info for later renewal
+                    def vpsMap = [:].withDefault { [needsRenew: false] }
 
+                    repos.each { repo ->
                         repo.envs.each { site ->
                             def domain = site.MAIN_DOMAIN
                                 .replaceAll('https://','')
@@ -36,7 +37,8 @@ pipeline {
 
                                 if (exists == "yes") {
                                     echo "🔑 Certificate already exists for ${domain}"
-                                    needsRenew = true
+                                    // mark VPS for renew later
+                                    vpsMap["${repo.vpsHost}:${repo.vpsUser}:${repo.vpsCredId}"].needsRenew = true
                                 } else {
                                     echo "❌ No certificate for ${domain}, issuing new one"
 
@@ -80,16 +82,19 @@ pipeline {
                                 }
                             }
                         }
+                    }
 
-                        // Run renew ONCE per repo
-                        // if (needsRenew) {
-                        //     sshagent (credentials: [repo.vpsCredId]) {
-                        //         sh """
-                        //             ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
-                        //             "sudo certbot renew --deploy-hook \\"systemctl reload nginx\\""
-                        //         """
-                        //     }
-                        // }
+                    // 🔁 Renew ONCE per VPS (not per repo)
+                    vpsMap.each { key, info ->
+                        if (info.needsRenew) {
+                            def (host, user, credId) = key.split(':')
+                            sshagent (credentials: [credId]) {
+                                sh """
+                                    ssh -o StrictHostKeyChecking=no ${user}@${host} \
+                                    "sudo certbot renew --deploy-hook \\"systemctl reload nginx\\""
+                                """
+                            }
+                        }
                     }
                 }
             }
