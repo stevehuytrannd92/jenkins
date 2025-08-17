@@ -33,46 +33,7 @@ pipeline {
         }
 
 
-        stage('Generate NGNIX config and deploy SSH') {
-            steps {
-                script {
-                    repos.each { repo ->
-                        dir(repo.folder) {
-
-                            repo.envs.each { env ->
-                                def domain = env.MAIN_DOMAIN.replaceAll(/^https?:\/\//, '').replaceAll(/\/$/, '')
-                                def tmpConfigFile = "${env.name}.conf"
-
-                                // Replace placeholders
-                                def nginxConfig = ngnixTemplate
-                                    .replace('{{DOMAIN}}', domain)
-                                    .replace('{{ENV_NAME}}', env.name)
-
-                                // Write locally
-                                writeFile(file: tmpConfigFile, text: nginxConfig)
-                                echo "✅ Generated Nginx config for ${env.name} locally: ${tmpConfigFile}"
-
-                                // Print content locally
-                                echo "📄 Local nginx config content for ${env.name}:\n${nginxConfig}"
-
-                                sshagent(credentials: [repo.vpsCredId]) {
-                                    sh """
-                                        scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${repo.vpsUser}@${repo.vpsHost}:/home/${repo.vpsUser}/${tmpConfigFile}
-
-                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
-                                        "sudo mv /home/${repo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} && sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile}"
-
-                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} "cat /etc/nginx/sites-available/${tmpConfigFile}"
-                                    """
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-
+    
 
         stage('Repos Pulls') {
             steps {
@@ -169,8 +130,77 @@ pipeline {
             }
         }
 
+        stage('Deploy Outs to VPS') {
+            steps {
+                script {
+                    repos.each { repo ->
+                        repo.envs.each { env ->
+                            def envOut = "outs/${env.name}"
+                            echo "🚀 Deploying ${envOut} to ${repo.vpsHost}:${repo.webrootBase}/${env.name}"
 
-     
+                            sshagent (credentials: [repo.vpsCredId]) {
+                                sh """
+                                    # Make sure target folder exists
+                                    ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
+                                    "sudo mkdir -p ${repo.webrootBase}/${env.name} && sudo chown -R ${repo.vpsUser}:${repo.vpsUser} ${repo.webrootBase}/${env.name}"
+
+                                    # Copy build output to VPS
+                                    scp -o StrictHostKeyChecking=no -r ${envOut}/* \\
+                                    ${repo.vpsUser}@${repo.vpsHost}:${repo.webrootBase}/${env.name}/
+
+                                    # Restore ownership to root if needed (optional, usually keep as ubuntu:www-data)
+                                    ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
+                                    "sudo chown -R www-data:www-data ${repo.webrootBase}/${env.name}"
+                                """
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+
+        stage('Generate NGNIX config and deploy SSH') {
+            steps {
+                script {
+                    repos.each { repo ->
+                        dir(repo.folder) {
+
+                            repo.envs.each { env ->
+                                def domain = env.MAIN_DOMAIN.replaceAll(/^https?:\/\//, '').replaceAll(/\/$/, '')
+                                def tmpConfigFile = "${env.name}.conf"
+
+                                // Replace placeholders
+                                def nginxConfig = ngnixTemplate
+                                    .replace('{{DOMAIN}}', domain)
+                                    .replace('{{ENV_NAME}}', env.name)
+
+                                // Write locally
+                                writeFile(file: tmpConfigFile, text: nginxConfig)
+                                echo "✅ Generated Nginx config for ${env.name} locally: ${tmpConfigFile}"
+
+                                // Print content locally
+                                echo "📄 Local nginx config content for ${env.name}:\n${nginxConfig}"
+
+                                sshagent(credentials: [repo.vpsCredId]) {
+                                    sh """
+                                        scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${repo.vpsUser}@${repo.vpsHost}:/home/${repo.vpsUser}/${tmpConfigFile}
+
+                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
+                                        "sudo mv /home/${repo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} && sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile}"
+
+                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} "cat /etc/nginx/sites-available/${tmpConfigFile}"
+                                    """
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
 
 
 
