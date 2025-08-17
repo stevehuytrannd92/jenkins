@@ -134,7 +134,7 @@ pipeline {
                             repo.envs.each { envConf ->
                                 def domain = extractDomain(envConf.MAIN_DOMAIN)
 
-                                if (isMissingCert(checkDomain, env.MISSING_CERTS)) {
+                                if (isMissingCert(domain, env.MISSING_CERTS)) {
                                     echo "⏭️ Skipping build for ${envConf.name} (${domain}) due to missing cert"
                                     return
                                 }
@@ -183,7 +183,7 @@ pipeline {
                             repo.envs.each { envConf ->
                                 def domain = extractDomain(envConf.MAIN_DOMAIN)
 
-                                if (isMissingCert(checkDomain, env.MISSING_CERTS)) {
+                                if (isMissingCert(domain, env.MISSING_CERTS)) {
                                     echo "⏭️ Skipping build for ${envConf.name} (${domain}) due to missing cert"
                                     return
                                 }
@@ -219,7 +219,7 @@ pipeline {
                             repo.envs.each { envConf ->
                                 def domain = extractDomain(envConf.MAIN_DOMAIN)
 
-                                if (isMissingCert(checkDomain, env.MISSING_CERTS)) {
+                                if (isMissingCert(domain, env.MISSING_CERTS)) {
                                     echo "⏭️ Skipping build for ${envConf.name} (${domain}) due to missing cert"
                                     return
                                 }
