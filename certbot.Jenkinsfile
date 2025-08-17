@@ -16,16 +16,21 @@ pipeline {
                 script {
                     repos.each { repo ->
                         repo.envs.each { site ->
-                            def domain = site.MAIN_DOMAIN.replaceAll('https://','').replaceAll('/','')
+                            def domain = site.MAIN_DOMAIN
+                                .replaceAll('https://','')
+                                .replaceAll('http://','')
+                                .replaceAll('/','')
+                                .replaceAll('^www\\.', '')   // <-- strip www
                             sshagent (credentials: [repo.vpsCredId]) {
 
                                 def exists = sh(
                                     script: """
                                         ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \
-                                        '[ -f /etc/letsencrypt/live/${domain}/fullchain.pem ] && echo yes || echo no'
+                                        "sudo test -f /etc/letsencrypt/live/${domain}/fullchain.pem && echo yes || echo no"
                                     """,
                                     returnStdout: true
                                 ).trim()
+
                                 if (exists == "yes") {
                                         sh """
                                             ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
