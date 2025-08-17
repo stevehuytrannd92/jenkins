@@ -17,9 +17,56 @@ pipeline {
         }
 
 
-    
+        stage('Handle Certificates') {
+            steps {
+                script {
+                    def missingCerts = []
+                    
+                    repos.each { repo ->
+                        repo.envs.each { site ->
+                            def domain = site.MAIN_DOMAIN.replaceAll('https://','').replaceAll('/','')
+                            def certPath = "/etc/letsencrypt/live/${site.name}/fullchain.pem"
+
+                            sshagent (credentials: [repo.vpsCredId]) {
+                                def exists = sh(
+                                    script: """
+                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \
+                                        '[ -f ${certPath} ] && echo yes || echo no'
+                                    """,
+                                    returnStdout: true
+                                ).trim()
+
+                                if (exists == "no") {
+                                    echo "❌ Certificate missing for ${domain}"
+                                    missingCerts << domain
+                                } else {
+                                    echo "✅ Certificate exists for ${domain}"
+                                }
+                            }
+                        }
+                    }
+
+                    // If missing, stop and trigger cert pipeline
+                    if (missingCerts) {
+                        echo "Some certificates are missing: ${missingCerts.join(', ')}"
+                        currentBuild.result = 'ABORTED'
+                        
+                        // Trigger another pipeline for issuing certs
+                        build job: 'cerbot-handler', 
+                            parameters: [],
+                            wait: false
+                        
+                        error("Stopping build because certificates are missing.")
+                    }
+                }
+            }
+        }
+
 
         stage('Repos Pulls') {
+            when {
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+            }
             steps {
                 script {
                     repos.each { repo ->
