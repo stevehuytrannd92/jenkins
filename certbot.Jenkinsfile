@@ -22,7 +22,7 @@ pipeline {
                                 def exists = sh(
                                     script: """
                                         ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \
-                                        '[ -f /etc/letsencrypt/live/${site.name}/fullchain.pem ] && echo yes || echo no'
+                                        '[ -f /etc/letsencrypt/live/${domain}/fullchain.pem ] && echo yes || echo no'
                                     """,
                                     returnStdout: true
                                 ).trim()

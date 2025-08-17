@@ -25,7 +25,7 @@ pipeline {
                     repos.each { repo ->
                         repo.envs.each { site ->
                             def domain = site.MAIN_DOMAIN.replaceAll('https://','').replaceAll('/','')
-                            def certPath = "/etc/letsencrypt/live/${site.name}/fullchain.pem"
+                            def certPath = "/etc/letsencrypt/live/${domain}/fullchain.pem"
 
                             sshagent (credentials: [repo.vpsCredId]) {
                                 def exists = sh(
