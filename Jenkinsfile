@@ -89,91 +89,105 @@ pipeline {
             }
             steps {
                 script {
+                    def parallelTasks = [:]
+
                     repos.each { repo ->
-                        dir(repo.folder) {
-                            if (!fileExists('.git')) {
-                                // First time clone
-                                checkout([
-                                    $class: 'GitSCM',
-                                    branches: [[name: "*/${repo.branch}"]],
-                                    doGenerateSubmoduleConfigurations: false,
-                                    userRemoteConfigs: [[
-                                        url: repo.url,
-                                        credentialsId: repo.credId
-                                    ]]
-                                ])
-                            } else {
-                                // Fetch and compare
-                                checkout([
-                                    $class: 'GitSCM',
-                                    branches: [[name: "*/${repo.branch}"]],
-                                    doGenerateSubmoduleConfigurations: false,
-                                    userRemoteConfigs: [[
-                                        url: repo.url,
-                                        credentialsId: repo.credId
-                                    ]],
-                                    extensions: [
-                                        [$class: 'WipeWorkspace'],        // optional: clean workspace if needed
-                                        [$class: 'PruneStaleBranch'],     // remove stale branches
-                                        [$class: 'CleanBeforeCheckout']   // optional: ensure clean state
-                                    ]
-                                ])
+                        parallelTasks["Pull-${repo.folder}"] = {
+                            dir(repo.folder) {
+                                if (!fileExists('.git')) {
+                                    // First time clone
+                                    checkout([
+                                        $class: 'GitSCM',
+                                        branches: [[name: "*/${repo.branch}"]],
+                                        doGenerateSubmoduleConfigurations: false,
+                                        userRemoteConfigs: [[
+                                            url: repo.url,
+                                            credentialsId: repo.credId
+                                        ]]
+                                    ])
+                                } else {
+                                    // Fetch and compare
+                                    checkout([
+                                        $class: 'GitSCM',
+                                        branches: [[name: "*/${repo.branch}"]],
+                                        doGenerateSubmoduleConfigurations: false,
+                                        userRemoteConfigs: [[
+                                            url: repo.url,
+                                            credentialsId: repo.credId
+                                        ]],
+                                        extensions: [
+                                            [$class: 'WipeWorkspace'],
+                                            [$class: 'PruneStaleBranch'],
+                                            [$class: 'CleanBeforeCheckout']
+                                        ]
+                                    ])
+                                }
                             }
                         }
                     }
+
+                    parallel parallelTasks
                 }
             }
         }
+
 
         stage('Build Projects') {
             steps {
                 script {
+                    def parallelBuilds = [:]
 
                     repos.each { repo ->
-                        dir(repo.folder) {
-                            repo.envs.each { envConf ->
-                                def domain = extractDomain(envConf.MAIN_DOMAIN)
+                        repo.envs.each { envConf ->
+                            def domain = extractDomain(envConf.MAIN_DOMAIN)
+                            def taskName = "Build-${repo.folder}-${envConf.name}"
 
-                                if (isMissingCert(domain, env.MISSING_CERTS)) {
-                                    echo "⏭️ Skipping build for ${envConf.name} (${domain}) due to missing cert"
-                                    return
-                                }
+                            parallelBuilds[taskName] = {
+                                dir(repo.folder) {
+                                    if (isMissingCert(domain, env.MISSING_CERTS)) {
+                                        echo "⏭️ Skipping build for ${envConf.name} (${domain}) due to missing cert"
+                                        return
+                                    }
 
-                                echo "=== Building ${repo.folder} branch >>${repo.branch}<< for environment: ${envConf.name} ==="
+                                    echo "=== Building ${repo.folder} branch >>${repo.branch}<< for environment: ${envConf.name} ==="
 
-                                withEnv(envConf.collect { k,v -> "${k.toUpperCase()}=${v}" } ) {
-                                    sh '''
-                                        if [ -f package.json ]; then
-                                            export CI=true
-                                            npm ci
-                                            npx next build && npx next-sitemap
-                                        else
-                                            echo "No package.json found, skipping build."
-                                        fi
-                                    '''
+                                    withEnv(envConf.collect { k,v -> "${k.toUpperCase()}=${v}" } ) {
+                                        sh '''
+                                            if [ -f package.json ]; then
+                                                export CI=true
+                                                npm ci
+                                                npx next build && npx next-sitemap
+                                            else
+                                                echo "No package.json found, skipping build."
+                                            fi
+                                        '''
 
-                                    def envOut = "outs/${envConf.name}"
-                                    sh """
-                                        mkdir -p outs
-                                        rm -rf ${envOut} || true
-                                        cp -r out ${envOut} || echo "⚠️ Warning: 'out' folder missing, copy skipped"
-                                    """
+                                        def envOut = "outs/${envConf.name}"
+                                        sh """
+                                            mkdir -p outs
+                                            rm -rf ${envOut} || true
+                                            cp -r out ${envOut} || echo "⚠️ Warning: 'out' folder missing, copy skipped"
+                                        """
 
-                                    sh """
-                                        if [ -d ${envOut} ] && [ "\$(ls -A ${envOut})" ]; then
-                                            echo "✅ Build output exists for ${repo.folder}/${envConf.name}"
-                                        else
-                                            echo "❌ ERROR: ${envOut} missing or empty for ${repo.folder}"
-                                            exit 1
-                                        fi
-                                    """
+                                        sh """
+                                            if [ -d ${envOut} ] && [ "\$(ls -A ${envOut})" ]; then
+                                                echo "✅ Build output exists for ${repo.folder}/${envConf.name}"
+                                            else
+                                                echo "❌ ERROR: ${envOut} missing or empty for ${repo.folder}"
+                                                exit 1
+                                            fi
+                                        """
+                                    }
                                 }
                             }
                         }
                     }
+
+                    parallel parallelBuilds
                 }
             }
         }
+
 
         stage('Deploy Outs to VPS') {
             steps {
