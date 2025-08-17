@@ -32,6 +32,7 @@ pipeline {
             steps {
                 script {
                     repos = load 'repos.groovy'
+                    vpsInfos = load 'vps.groovy'
                     ngnixTemplate = readFile('ngnix/https.template.conf')
                 }
             }
@@ -43,11 +44,12 @@ pipeline {
                     def missing = []
 
                     repos.each { repo ->
+                        def vpsInfo = vpsInfos[repo.vpsRef]
                         repo.envs.each { site ->
                             def domain = extractDomain(site.MAIN_DOMAIN)
 
 
-                            sshagent (credentials: [repo.vpsCredId]) {
+                            sshagent (credentials: [vpsInfo.vpsCredId]) {
                                 def exists = sh(
                                     script: """
                                         ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \
@@ -94,6 +96,7 @@ pipeline {
                     repos.each { repo ->
                         parallelTasks["Pull-${repo.folder}"] = {
                             dir(repo.folder) {
+                                def vpsInfo = vpsInfos[repo.vpsRef]
                                 if (!fileExists('.git')) {
                                     // First time clone (shallow)
                                     checkout([
@@ -144,6 +147,8 @@ pipeline {
 
                     repos.each { repo ->
                         parallelBuilds["Repo-${repo.folder}"] = {
+                            def vpsInfo = vpsInfos[repo.vpsRef]
+
                             dir(repo.folder) {
                                 repo.envs.each { envConf ->
                                     def domain = extractDomain(envConf.MAIN_DOMAIN)
@@ -204,6 +209,8 @@ pipeline {
             steps {
                 script {
                     repos.each { repo ->
+                        def vpsInfo = vpsInfos[repo.vpsRef]
+
                         dir(repo.folder) {
                             repo.envs.each { envConf ->
                                 def domain = extractDomain(envConf.MAIN_DOMAIN)
@@ -240,6 +247,8 @@ pipeline {
             steps {
                 script {
                     repos.each { repo ->
+                        def vpsInfo = vpsInfos[repo.vpsRef]
+
                         dir(repo.folder) {
                             repo.envs.each { envConf ->
                                 def domain = extractDomain(envConf.MAIN_DOMAIN)

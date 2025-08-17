@@ -6,6 +6,8 @@ pipeline {
             steps {
                 script {
                     repos = load 'repos.groovy'
+                    vpsInfos = load 'vps.groovy'
+
                     certbotTemplate = readFile('ngnix/http.template.conf')
                 }
             }
@@ -17,6 +19,8 @@ pipeline {
                     def vpsMap = [:]  // plain HashMap
 
                     repos.each { repo ->
+                        def vpsInfo = vpsInfos[repo.vpsRef]
+
                         repo.envs.each { site ->
                             def domain = site.MAIN_DOMAIN
                                 .replaceAll('https://','')

@@ -39,6 +39,8 @@ return [
         vpsHost: '165.154.235.205',
         webrootBase: '/var/www/presale',
 
+        vpsRef : 'vps1',   // 👈 just reference which VPS to use
+
         envs: [
             [ 
                 name: 'btcswifts', 
@@ -62,6 +64,8 @@ return [
         vpsUser: 'ubuntu',
         vpsHost: '165.154.235.205',
         webrootBase: '/var/www/presale',
+
+        vpsRef : 'vps1',   // 👈 just reference which VPS to use
         envs: [
             [ 
                 name: 'wepetoken', 
@@ -86,6 +90,8 @@ return [
         vpsHost: '165.154.235.205',
         webrootBase: '/var/www/presale',
 
+        vpsRef : 'vps1',   // 👈 just reference which VPS to use
+
         envs: [
             [ 
                 name: 'token6969', 
@@ -109,6 +115,8 @@ return [
         vpsUser: 'ubuntu',
         vpsHost: '165.154.235.205',
         webrootBase: '/var/www/presale',
+
+        vpsRef : 'vps1',   // 👈 just reference which VPS to use
         envs: [
             [ 
                 name: 'btchyper', 
