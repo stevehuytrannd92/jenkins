@@ -14,8 +14,7 @@ pipeline {
         stage('Handle Certificates') {
             steps {
                 script {
-                    // Collect VPS info for later renewal
-                    def vpsMap = [:].withDefault { [needsRenew: false] }
+                    def vpsMap = [:]  // plain HashMap
 
                     repos.each { repo ->
                         repo.envs.each { site ->
@@ -38,7 +37,12 @@ pipeline {
                                 if (exists == "yes") {
                                     echo "🔑 Certificate already exists for ${domain}"
                                     // mark VPS for renew later
-                                    vpsMap["${repo.vpsHost}:${repo.vpsUser}:${repo.vpsCredId}"].needsRenew = true
+                                    def key = "${repo.vpsHost}:${repo.vpsUser}:${repo.vpsCredId}"
+                                    if (!vpsMap.containsKey(key)) {
+                                        vpsMap[key] = [needsRenew: false]
+                                    }
+                                    vpsMap[key].needsRenew = true
+
                                 } else {
                                     echo "❌ No certificate for ${domain}, issuing new one"
 
@@ -84,7 +88,7 @@ pipeline {
                         }
                     }
 
-                    // 🔁 Renew ONCE per VPS (not per repo)
+                    // 🔁 Renew ONCE per VPS
                     vpsMap.each { key, info ->
                         if (info.needsRenew) {
                             def (host, user, credId) = key.split(':')
@@ -95,7 +99,7 @@ pipeline {
                                 """
                             }
                         }
-                    }
+                    }                
                 }
             }
         }
