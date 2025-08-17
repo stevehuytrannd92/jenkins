@@ -5,29 +5,13 @@ pipeline {
     }
 
     stages {
-        // stage('Debug SSH') {
-        //     steps {
-        //         sshagent(credentials: ['id_ed25519_stevehuytrannd92']) {
-        //             sh '''
-        //                 set +e  # don't exit on non-zero
-        //                 echo "Testing SSH..."
-        //                 ssh -vT git@github.com
-        //                 env | grep SSH_AUTH_SOCK
-        //                 echo "SSH authentication to GitHub succeeded."
-
-        //             '''
-        //         }
-        //     }
-        // }
-
-
         stage('Load Script') {
             steps {
                 script {
                     // The 'load' step is placed inside a 'script' block within a 'steps' block,
                     // which is implicitly within the agent's context.
                     repos = load 'repos.groovy'
-                    ngnixTemplate = readFile('ngnix/nginx.template.conf')
+                    ngnixTemplate = readFile('ngnix/https.template.conf')
                 }
             }
         }
