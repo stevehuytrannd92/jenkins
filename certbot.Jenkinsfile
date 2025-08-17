@@ -71,6 +71,7 @@ pipeline {
                                     sh """
                                         ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
                                         "sudo mkdir -p ${repo.webrootBase}/${site.name} && \\
+                                         sudo chown -R www-data:www-data ${repo.webrootBase}/${site.name} && \\
                                          sudo certbot certonly --webroot -w ${repo.webrootBase}/${site.name} \\
                                          -d ${domain} -d www.${domain}"
                                     """
