@@ -47,15 +47,13 @@ pipeline {
 
                     // If missing, stop and trigger cert pipeline
                     if (missingCerts) {
-                        echo "Some certificates are missing: ${missingCerts.join(', ')}"
-                        currentBuild.result = 'ABORTED'
-                        
+                        echo "Some certificates are missing: ${missingCerts.join(', ')}"                        
                         // Trigger another pipeline for issuing certs
                         build job: 'cerbot-handler', 
                             parameters: [],
-                            wait: false
+                            wait: true,
+                            propagate: true // fail if cert job fails
                         
-                        error("Stopping build because certificates are missing.")
                     }
                 }
             }
