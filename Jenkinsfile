@@ -8,8 +8,9 @@ def extractDomain(String url) {
         .replaceAll(/^www\./, '')        // strip leading www
 }
 
+// Helper function to always work with safe value
 def isMissingCert(String domain) {
-    return (missingCerts ?: []).contains(domain)   // guard against null
+    return (missingCerts != null && missingCerts.contains(domain))
 }
 
 pipeline {
@@ -36,8 +37,7 @@ pipeline {
         stage('Check Certificates') {
             steps {
                 script {
-                    // IMPORTANT: clear instead of reassign
-                    missingCerts.clear()
+                    missingCerts = []
 
                     repos.each { repo ->
                         repo.envs.each { site ->
@@ -55,7 +55,7 @@ pipeline {
 
                                 if (exists == "no") {
                                     echo "⚠️  Certificate missing for ${domain}"
-                                    missingCerts << domain
+                                    missingCerts += domain   // safe append
                                 } else {
                                     echo "✅ Certificate exists for ${domain}"
                                 }
