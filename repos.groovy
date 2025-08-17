@@ -35,6 +35,10 @@ return [
         folder: 'btcswift',
         credId: 'id_ed25519_stevehuytrannd92',
         vpsCredId: 'vps1',
+        vpsUser: 'ubuntu',
+        vpsHost: '123.45.67.89',
+        webrootBase: '/var/www/presale',
+
         envs: [
             [ 
                 name: 'btcswifts', 

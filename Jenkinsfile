@@ -36,11 +36,6 @@ pipeline {
         stage('Generate NGNIX config and deploy SSH') {
             steps {
                 script {
-                    def vpsUser = 'ubuntu'
-                    def vpsHost = '165.154.235.205'
-
-
-
                     repos.each { repo ->
                         dir(repo.folder) {
 
@@ -62,9 +57,9 @@ pipeline {
 
                                 sshagent(credentials: [repo.vpsCredId]) {
                                     sh """
-                                        scp ${tmpConfigFile} ${vpsUser}@${vpsHost}:/etc/nginx/sites-available/${tmpConfigFile}
+                                        scp ${tmpConfigFile}  ${repo.vpsUser}@${repo.vpsHost}:/etc/nginx/sites-available/${tmpConfigFile}
                                         echo "📡 Remote nginx config content for ${env.name}:"
-                                        ssh ${vpsUser}@${vpsHost} 'cat /etc/nginx/sites-available/${tmpConfigFile}'
+                                        ssh  ${repo.vpsUser}@${repo.vpsHost}  'cat /etc/nginx/sites-available/${tmpConfigFile}'
 
                                     """
                                 }
