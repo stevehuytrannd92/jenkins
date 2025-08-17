@@ -134,24 +134,26 @@ pipeline {
             steps {
                 script {
                     repos.each { repo ->
-                        repo.envs.each { env ->
-                            def envOut = "outs/${env.name}"
-                            echo "🚀 Deploying ${envOut} to ${repo.vpsHost}:${repo.webrootBase}/${env.name}"
+                        dir(repo.folder) {
+                            repo.envs.each { env ->
+                                def envOut = "outs/${env.name}"
+                                echo "🚀 Deploying ${envOut} to ${repo.vpsHost}:${repo.webrootBase}/${env.name}"
 
-                            sshagent (credentials: [repo.vpsCredId]) {
-                                sh """
-                                    # Make sure target folder exists
-                                    ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
-                                    "sudo mkdir -p ${repo.webrootBase}/${env.name} && sudo chown -R ${repo.vpsUser}:${repo.vpsUser} ${repo.webrootBase}/${env.name}"
+                                sshagent (credentials: [repo.vpsCredId]) {
+                                    sh """
+                                        # Make sure target folder exists
+                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
+                                        "sudo mkdir -p ${repo.webrootBase}/${env.name} && sudo chown -R ${repo.vpsUser}:${repo.vpsUser} ${repo.webrootBase}/${env.name}"
 
-                                    # Copy build output to VPS
-                                    scp -o StrictHostKeyChecking=no -r ${envOut}/* \\
-                                    ${repo.vpsUser}@${repo.vpsHost}:${repo.webrootBase}/${env.name}/
+                                        # Copy build output to VPS
+                                        scp -o StrictHostKeyChecking=no -r ${envOut}/* \\
+                                        ${repo.vpsUser}@${repo.vpsHost}:${repo.webrootBase}/${env.name}/
 
-                                    # Restore ownership to root if needed (optional, usually keep as ubuntu:www-data)
-                                    ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
-                                    "sudo chown -R www-data:www-data ${repo.webrootBase}/${env.name}"
-                                """
+                                        # Restore ownership to root if needed (optional, usually keep as ubuntu:www-data)
+                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
+                                        "sudo chown -R www-data:www-data ${repo.webrootBase}/${env.name}"
+                                    """
+                                }
                             }
                         }
                     }
