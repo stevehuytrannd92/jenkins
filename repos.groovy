@@ -88,7 +88,7 @@ return [
 
         envs: [
             [ 
-                name: 'spx6900token', 
+                name: 'spxtoken6900', 
                 MAIN_DOMAIN:'https://spxtoken6900.com/',
                 BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
                 LOGO_PATH:'/img/token6900/favicon.png',
