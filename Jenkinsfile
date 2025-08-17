@@ -189,11 +189,25 @@ pipeline {
 
                                 sshagent(credentials: [repo.vpsCredId]) {
                                     sh """
+                                        # Upload config
                                         scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${repo.vpsUser}@${repo.vpsHost}:/home/${repo.vpsUser}/${tmpConfigFile}
 
-                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
-                                        "sudo mv /home/${repo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} && sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile}"
+                                        # Move config into sites-available
+                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} "
+                                            sudo mv /home/${repo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
+                                            sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile} &&
 
+                                            # Enable site (symlink if not exists)
+                                            sudo ln -sf /etc/nginx/sites-available/${tmpConfigFile} /etc/nginx/sites-enabled/${tmpConfigFile} &&
+
+                                            # Test nginx config
+                                            sudo nginx -t &&
+
+                                            # Reload nginx
+                                            sudo systemctl reload nginx
+                                        "
+
+                                        # Verify deployed config
                                         ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} "cat /etc/nginx/sites-available/${tmpConfigFile}"
                                     """
                                 }
@@ -203,8 +217,6 @@ pipeline {
                 }
             }
         }
-
-
 
 
 
