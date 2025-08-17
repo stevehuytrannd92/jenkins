@@ -29,7 +29,8 @@ def runWithMaxParallel(tasks, maxParallel = 3) {
     def total = keys.size()
 
     for (int i = 0; i < total; i += maxParallel) {
-        def slice = keys.subList(i, Math.min(i + maxParallel, total))
+        // 🔑 convert subList to real List so it's serializable
+        def slice = new ArrayList(keys.subList(i, Math.min(i + maxParallel, total)))
         def batch = [:]
         slice.each { k -> batch[k] = tasks[k] }
         parallel batch
