@@ -89,7 +89,7 @@ pipeline {
                     }
 
                     // 🔁 Renew ONCE per VPS
-                    vpsMap.eachLine { key, info ->
+                    vpsMap.each { key, info ->
                         if (info.needsRenew) {
                             def (host, user, credId) = key.split(':')
                             sshagent (credentials: [credId]) {
