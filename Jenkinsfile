@@ -59,7 +59,7 @@ pipeline {
                         echo "⚠️  Some certificates are missing: ${missingCerts.join(', ')}"
                         // Fire certbot handler in background, do not fail current pipeline
                         // save for later stages
-                        env.MISSING_CERTS = missingCertDomains.join(',')
+                        env.MISSING_CERTS = missingCerts.join(',')
 
 
                         build job: 'cerbot-handler',
