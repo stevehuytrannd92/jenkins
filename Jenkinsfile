@@ -57,10 +57,12 @@ pipeline {
 
                                 sshagent(credentials: [repo.vpsCredId]) {
                                     sh """
-                                        scp -o StrictHostKeyChecking=no ${tmpConfigFile}  ${repo.vpsUser}@${repo.vpsHost}:/etc/nginx/sites-available/${tmpConfigFile}
-                                        echo "📡 Remote nginx config content for ${env.name}:"
-                                        ssh -o StrictHostKeyChecking=no  ${repo.vpsUser}@${repo.vpsHost}  'cat /etc/nginx/sites-available/${tmpConfigFile}'
+                                        scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${repo.vpsUser}@${repo.vpsHost}:/home/${repo.vpsUser}/${tmpConfigFile}
 
+                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
+                                        "sudo mv /home/${repo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} && sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile}"
+
+                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} "cat /etc/nginx/sites-available/${tmpConfigFile}"
                                     """
                                 }
                             }
