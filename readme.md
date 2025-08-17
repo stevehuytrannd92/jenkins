@@ -28,7 +28,9 @@ docker exec -it -u root jenkins-sandbox bash
 # Inside Jenkins container
 apt-get update
 apt-get install -y python3 build-essential
-npm config set python $(which python3)
+which python3
+
+--reset container
 
 
 
