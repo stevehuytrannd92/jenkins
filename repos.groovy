@@ -36,7 +36,7 @@ return [
         credId: 'id_ed25519_stevehuytrannd92',
         vpsCredId: 'vps1',
         vpsUser: 'ubuntu',
-        vpsHost: '123.45.67.89',
+        vpsHost: '165.154.235.205',
         webrootBase: '/var/www/presale',
 
         envs: [
