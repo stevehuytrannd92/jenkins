@@ -89,17 +89,17 @@ pipeline {
                     }
 
                     // 🔁 Renew ONCE per VPS
-                    // vpsMap.each { key, info ->
-                    //     if (info.needsRenew) {
-                    //         def (host, user, credId) = key.split(':')
-                    //         sshagent (credentials: [credId]) {
-                    //             sh """
-                    //                 ssh -o StrictHostKeyChecking=no ${user}@${host} \
-                    //                 "sudo certbot renew --deploy-hook \\"systemctl reload nginx\\""
-                    //             """
-                    //         }
-                    //     }
-                    // }                
+                    vpsMap.eachLine { key, info ->
+                        if (info.needsRenew) {
+                            def (host, user, credId) = key.split(':')
+                            sshagent (credentials: [credId]) {
+                                sh """
+                                    ssh -o StrictHostKeyChecking=no ${user}@${host} \
+                                    "sudo certbot renew --deploy-hook \\"systemctl reload nginx\\""
+                                """
+                            }
+                        }
+                    }                
                 }
             }
         }
