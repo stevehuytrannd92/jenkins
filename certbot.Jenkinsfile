@@ -6,7 +6,7 @@ pipeline {
             steps {
                 script {
                     repos = load 'repos.groovy'
-                    certbotTemplate = load 'ngnix/http.template.conf'
+                    certbotTemplate = readFile('ngnix/http.template.conf')
                 }
             }
         }
