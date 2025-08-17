@@ -80,31 +80,38 @@ pipeline {
         }
 
         stage('Repos Pulls') {
+            when {
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+            }
             steps {
                 script {
                     repos.each { repo ->
                         dir(repo.folder) {
                             if (!fileExists('.git')) {
+                                // First time clone
                                 checkout([
                                     $class: 'GitSCM',
                                     branches: [[name: "*/${repo.branch}"]],
+                                    doGenerateSubmoduleConfigurations: false,
                                     userRemoteConfigs: [[
                                         url: repo.url,
                                         credentialsId: repo.credId
                                     ]]
                                 ])
                             } else {
+                                // Fetch and compare
                                 checkout([
                                     $class: 'GitSCM',
                                     branches: [[name: "*/${repo.branch}"]],
+                                    doGenerateSubmoduleConfigurations: false,
                                     userRemoteConfigs: [[
                                         url: repo.url,
                                         credentialsId: repo.credId
                                     ]],
                                     extensions: [
-                                        [$class: 'WipeWorkspace'],
-                                        [$class: 'PruneStaleBranch'],
-                                        [$class: 'CleanBeforeCheckout']
+                                        [$class: 'WipeWorkspace'],        // optional: clean workspace if needed
+                                        [$class: 'PruneStaleBranch'],     // remove stale branches
+                                        [$class: 'CleanBeforeCheckout']   // optional: ensure clean state
                                     ]
                                 ])
                             }
