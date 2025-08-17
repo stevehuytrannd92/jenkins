@@ -143,12 +143,11 @@ pipeline {
                     def parallelBuilds = [:]
 
                     repos.each { repo ->
-                        repo.envs.each { envConf ->
-                            def domain = extractDomain(envConf.MAIN_DOMAIN)
-                            def taskName = "Build-${repo.folder}-${envConf.name}"
+                        parallelBuilds["Repo-${repo.folder}"] = {
+                            dir(repo.folder) {
+                                repo.envs.each { envConf ->
+                                    def domain = extractDomain(envConf.MAIN_DOMAIN)
 
-                            parallelBuilds[taskName] = {
-                                dir(repo.folder) {
                                     if (isMissingCert(domain, env.MISSING_CERTS)) {
                                         echo "⏭️ Skipping build for ${envConf.name} (${domain}) due to missing cert"
                                         return
