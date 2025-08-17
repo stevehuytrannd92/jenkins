@@ -15,12 +15,15 @@ pipeline {
             steps {
                 script {
                     repos.each { repo ->
+                        boolean needsRenew = false
+
                         repo.envs.each { site ->
                             def domain = site.MAIN_DOMAIN
                                 .replaceAll('https://','')
                                 .replaceAll('http://','')
                                 .replaceAll('/','')
-                                .replaceAll('^www\\.', '')   // <-- strip www
+                                .replaceAll('^www\\.', '')   // strip www
+
                             sshagent (credentials: [repo.vpsCredId]) {
 
                                 def exists = sh(
@@ -32,56 +35,54 @@ pipeline {
                                 ).trim()
 
                                 if (exists == "yes") {
-                                        sh """
-                                            ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
-                                            "sudo certbot renew --deploy-hook \\"systemctl reload nginx\\""
-                                        """
-                                } else {                                
+                                    echo "🔑 Certificate already exists for ${domain}"
+                                    needsRenew = true
+                                } else {
+                                    echo "❌ No certificate for ${domain}, issuing new one"
+
                                     def tmpConfigFile = "${site.name}.conf"
 
-
-                                    // Replace placeholders
+                                    // Replace placeholders in nginx template
                                     def nginxConfig = certbotTemplate
                                         .replace('{{DOMAIN}}', domain)
                                         .replace('{{ENV_NAME}}', site.name)
                                         .replace('{{WEBROOT_BASE}}', repo.webrootBase)
 
                                     writeFile(file: tmpConfigFile, text: nginxConfig)
-                                    echo "✅ Generated Nginx config for ${site.name} locally: ${tmpConfigFile}"
+                                    echo "✅ Generated Nginx config for ${site.name}: ${tmpConfigFile}"
 
-                                    // Print content locally
-                                    echo "📄 Local nginx config content for ${site.name}:\n${nginxConfig}"
-                                        sh """
-                                            # Upload config
-                                            scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${repo.vpsUser}@${repo.vpsHost}:/home/${repo.vpsUser}/${tmpConfigFile}
+                                    sh """
+                                        # Upload config
+                                        scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${repo.vpsUser}@${repo.vpsHost}:/home/${repo.vpsUser}/${tmpConfigFile}
 
-                                            # Move config into sites-available
-                                            ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} "
-                                                sudo mv /home/${repo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
-                                                sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile} &&
+                                        # Move config into sites-available & enable
+                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} "
+                                            sudo mv /home/${repo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
+                                            sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile} &&
+                                            sudo ln -sf /etc/nginx/sites-available/${tmpConfigFile} /etc/nginx/sites-enabled/${tmpConfigFile} &&
+                                            sudo nginx -t &&
+                                            sudo systemctl reload nginx
+                                        "
+                                    """
 
-                                                # Enable site (symlink if not exists)
-                                                sudo ln -sf /etc/nginx/sites-available/${tmpConfigFile} /etc/nginx/sites-enabled/${tmpConfigFile} &&
-
-                                                # Test nginx config
-                                                sudo nginx -t &&
-
-                                                # Reload nginx
-                                                sudo systemctl reload nginx
-                                            "
-
-                                            # Verify deployed config
-                                            ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} "cat /etc/nginx/sites-available/${tmpConfigFile}"
-                                        """
-
-                                        sh """
-                                            ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
-                                            "sudo certbot certonly --webroot -w ${repo.webrootBase}/${site.name} \\
-                                            -d ${domain} \\
-                                            -d www.${domain}"
-                                        """
-                                    
+                                    // Ensure webroot folder and issue new cert
+                                    sh """
+                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
+                                        "sudo mkdir -p ${repo.webrootBase}/${site.name} && \\
+                                         sudo certbot certonly --webroot -w ${repo.webrootBase}/${site.name} \\
+                                         -d ${domain} -d www.${domain}"
+                                    """
                                 }
+                            }
+                        }
+
+                        // Run renew ONCE per VPS
+                        if (needsRenew) {
+                            sshagent (credentials: [repo.vpsCredId]) {
+                                sh """
+                                    ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
+                                    "sudo certbot renew --deploy-hook \\"systemctl reload nginx\\""
+                                """
                             }
                         }
                     }
