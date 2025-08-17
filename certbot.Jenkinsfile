@@ -79,15 +79,15 @@ pipeline {
                             }
                         }
 
-                        // Run renew ONCE per VPS
-                        if (needsRenew) {
-                            sshagent (credentials: [repo.vpsCredId]) {
-                                sh """
-                                    ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
-                                    "sudo certbot renew --deploy-hook \\"systemctl reload nginx\\""
-                                """
-                            }
-                        }
+                        // Run renew ONCE per repo
+                        // if (needsRenew) {
+                        //     sshagent (credentials: [repo.vpsCredId]) {
+                        //         sh """
+                        //             ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
+                        //             "sudo certbot renew --deploy-hook \\"systemctl reload nginx\\""
+                        //         """
+                        //     }
+                        // }
                     }
                 }
             }
