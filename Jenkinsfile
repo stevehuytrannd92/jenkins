@@ -1,5 +1,3 @@
-def missingCerts = []   // global list for missing domains
-
 // --- Helper functions ---
 def extractDomain(String url) {
     return url
@@ -8,10 +6,15 @@ def extractDomain(String url) {
         .replaceAll(/^www\./, '')        // strip leading www
 }
 
-// Helper function to always work with safe value
-def isMissingCert(String domain) {
-    return (missingCerts != null && missingCerts.contains(domain))
+// Check if domain exists in MISSING_CERTS string
+def isMissingCert(String domain, String missingCertsStr) {
+    if (!missingCertsStr?.trim()) {
+        return false
+    }
+    def domains = missingCertsStr.split(',').collect { it.trim() }
+    return domains.contains(domain)
 }
+
 
 pipeline {
     agent any
@@ -37,7 +40,7 @@ pipeline {
         stage('Check Certificates') {
             steps {
                 script {
-                    missingCerts = []
+                    def missing = []
 
                     repos.each { repo ->
                         repo.envs.each { site ->
@@ -55,7 +58,7 @@ pipeline {
 
                                 if (exists == "no") {
                                     echo "⚠️  Certificate missing for ${domain}"
-                                    missingCerts += domain   // safe append
+                                    missing << domain
                                 } else {
                                     echo "✅ Certificate exists for ${domain}"
                                 }
@@ -63,9 +66,10 @@ pipeline {
                         }
                     }
 
-                    if (missingCerts) {
-                        echo "⚠️  Some certificates are missing: ${missingCerts.join(', ')}"
+                    if (missing) {
+                        echo "⚠️  Some certificates are missing: ${missing.join(', ')}"
                         // save into env for later stages
+                        env.MISSING_CERTS = missing.join(',')
 
                         // Trigger certbot handler in background
                         // build job: 'cerbot-handler',
@@ -130,7 +134,7 @@ pipeline {
                             repo.envs.each { envConf ->
                                 def domain = extractDomain(envConf.MAIN_DOMAIN)
 
-                                if (isMissingCert(domain)) {
+                                if (isMissingCert(checkDomain, env.MISSING_CERTS)) {
                                     echo "⏭️ Skipping build for ${envConf.name} (${domain}) due to missing cert"
                                     return
                                 }
@@ -179,7 +183,7 @@ pipeline {
                             repo.envs.each { envConf ->
                                 def domain = extractDomain(envConf.MAIN_DOMAIN)
 
-                                if (isMissingCert(domain)) {
+                                if (isMissingCert(checkDomain, env.MISSING_CERTS)) {
                                     echo "⏭️ Skipping build for ${envConf.name} (${domain}) due to missing cert"
                                     return
                                 }
@@ -215,7 +219,7 @@ pipeline {
                             repo.envs.each { envConf ->
                                 def domain = extractDomain(envConf.MAIN_DOMAIN)
 
-                                if (isMissingCert(domain)) {
+                                if (isMissingCert(checkDomain, env.MISSING_CERTS)) {
                                     echo "⏭️ Skipping build for ${envConf.name} (${domain}) due to missing cert"
                                     return
                                 }
