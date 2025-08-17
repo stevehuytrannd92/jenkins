@@ -9,7 +9,7 @@ def extractDomain(String url) {
 }
 
 def isMissingCert(String domain) {
-    return missingCerts.contains(domain)
+    return (missingCerts ?: []).contains(domain)   // guard against null
 }
 
 pipeline {
@@ -36,7 +36,8 @@ pipeline {
         stage('Check Certificates') {
             steps {
                 script {
-                    missingCerts = []  // reset before checking
+                    // IMPORTANT: clear instead of reassign
+                    missingCerts.clear()
 
                     repos.each { repo ->
                         repo.envs.each { site ->
