@@ -141,13 +141,15 @@ pipeline {
 
                                 sshagent (credentials: [repo.vpsCredId]) {
                                     sh """
-                                        # Make sure target folder exists
-                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
-                                        "sudo mkdir -p ${repo.webrootBase}/${env.name} && sudo chown -R ${repo.vpsUser}:${repo.vpsUser} ${repo.webrootBase}/${env.name}"
-
                                         # Copy build output to VPS
-                                        scp -o StrictHostKeyChecking=no -r ${envOut}/* \\
-                                        ${repo.vpsUser}@${repo.vpsHost}:${repo.webrootBase}/${env.name}/
+                                        tar -czf ${env.name}.tar.gz -C outs/${env.name} .
+                                        scp -o StrictHostKeyChecking=no ${env.name}.tar.gz ${repo.vpsUser}@${repo.vpsHost}:/tmp/
+
+                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} "
+                                            sudo mkdir -p ${repo.webrootBase}/${env.name} &&
+                                            sudo tar -xzf /tmp/${env.name}.tar.gz -C ${repo.webrootBase}/${env.name} &&
+                                            rm /tmp/${env.name}.tar.gz
+                                        "
 
                                         # Restore ownership to root if needed (optional, usually keep as ubuntu:www-data)
                                         ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
