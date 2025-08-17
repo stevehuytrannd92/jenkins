@@ -4,6 +4,12 @@ pipeline {
         nodejs 'NODE_20' // NodeJS installation configured in Jenkins global tools
     }
 
+    environment {
+        // store missing domains across stages
+        MISSING_CERTS = ""
+    }
+
+
     stages {
         stage('Load Script') {
             steps {
@@ -17,14 +23,18 @@ pipeline {
         }
 
 
-        stage('Handle Certificates') {
+        stage('Check Certificates') {
             steps {
                 script {
                     def missingCerts = []
                     
                     repos.each { repo ->
                         repo.envs.each { site ->
-                            def domain = site.MAIN_DOMAIN.replaceAll('https://','').replaceAll('/','')
+                            def domain = site.MAIN_DOMAIN
+                                .replaceAll('https://','')
+                                .replaceAll('http://','')
+                                .replaceAll('/','')
+                                .replaceAll('^www\\.', '')   // strip www
 
                             sshagent (credentials: [repo.vpsCredId]) {
                                 def exists = sh(
@@ -45,15 +55,19 @@ pipeline {
                         }
                     }
 
-                    // If missing, stop and trigger cert pipeline
                     if (missingCerts) {
-                        echo "Some certificates are missing: ${missingCerts.join(', ')}"                        
-                        // Trigger another pipeline for issuing certs
-                        build job: 'cerbot-handler', 
+                        echo "⚠️  Some certificates are missing: ${missingCerts.join(', ')}"
+                        // Fire certbot handler in background, do not fail current pipeline
+                        // save for later stages
+                        env.MISSING_CERTS = missingCertDomains.join(',')
+
+
+                        build job: 'cerbot-handler',
                             parameters: [],
-                            wait: true,
-                            propagate: true // fail if cert job fails
-                        
+                            propagate: false,   // don't fail if certbot-handler fails
+                            wait: false
+                    } else {
+                        echo "✅ All certificates present"
                     }
                 }
             }
@@ -106,12 +120,26 @@ pipeline {
         stage('Build Projects') {
             steps {
                 script {
+                    def missing = env.MISSING_CERTS?.split(',') as List
+
                     repos.each { repo ->
                         dir(repo.folder) {
-                            repo.envs.each { env ->
-                                echo "=== Building ${repo.folder} branch >>${repo.branch}<< for environment: ${env.name} ==="
+                            repo.envs.each { envConf ->
+                                
+                                def domain = envConf.MAIN_DOMAIN
+                                    .replaceAll(/^https?:\/\//, '')
+                                    .replaceAll(/\/$/, '')
+                                    .replaceAll(/^www\./, '')
 
-                                withEnv(env.collect { k,v -> "${k.toUpperCase()}=${v}" } ) {
+                                if (missing.contains(domain)) {
+                                    echo "⏭️ Skipping build for ${envConf.name} (${domain}) due to missing cert"
+                                    return
+                                }
+
+
+                                echo "=== Building ${repo.folder} branch >>${repo.branch}<< for environment: ${envConf.name} ==="
+
+                                withEnv(envConf.collect { k,v -> "${k.toUpperCase()}=${v}" } ) {
                                     // Build once (all envs use same build) or repeat if needed
                                     sh '''
                                         if [ -f package.json ]; then
@@ -124,7 +152,7 @@ pipeline {
                                     '''
 
                                     // Copy out folder to environment-specific folder
-                                    def envOut = "outs/${env.name}"
+                                    def envOut = "outs/${envConf.name}"
                                     sh """
                                         # Ensure parent folder exists
                                         mkdir -p outs
@@ -141,7 +169,7 @@ pipeline {
                                     // Verify
                                     sh """
                                         if [ -d ${envOut} ] && [ "\$(ls -A ${envOut})" ]; then
-                                            echo "✅ Build output exists for ${repo.folder}/${env.name}"
+                                            echo "✅ Build output exists for ${repo.folder}/${envConf.name}"
                                         else
                                             echo "❌ ERROR: ${envOut} missing or empty for ${repo.folder}"
                                             exit 1
@@ -161,27 +189,39 @@ pipeline {
         stage('Deploy Outs to VPS') {
             steps {
                 script {
+                    def missing = env.MISSING_CERTS?.split(',') as List
+
                     repos.each { repo ->
                         dir(repo.folder) {
-                            repo.envs.each { env ->
-                                def envOut = "outs/${env.name}"
-                                echo "🚀 Deploying ${envOut} to ${repo.vpsHost}:${repo.webrootBase}/${env.name}"
+                            repo.envs.each { envConf ->
+                                def domain = envConf.MAIN_DOMAIN
+                                    .replaceAll(/^https?:\/\//, '')
+                                    .replaceAll(/\/$/, '')
+                                    .replaceAll(/^www\./, '')
+
+                                if (missing.contains(domain)) {
+                                    echo "⏭️ Skipping deploy for ${envConf.name} (${domain}) due to missing cert"
+                                    return
+                                }
+
+                                def envOut = "outs/${envConf.name}"
+                                echo "🚀 Deploying ${envOut} to ${repo.vpsHost}:${repo.webrootBase}/${envConf.name}"
 
                                 sshagent (credentials: [repo.vpsCredId]) {
                                     sh """
                                         # Copy build output to VPS
-                                        tar -czf ${env.name}.tar.gz -C outs/${env.name} .
-                                        scp -o StrictHostKeyChecking=no ${env.name}.tar.gz ${repo.vpsUser}@${repo.vpsHost}:/tmp/
+                                        tar -czf ${envConf.name}.tar.gz -C outs/${envConf.name} .
+                                        scp -o StrictHostKeyChecking=no ${envConf.name}.tar.gz ${repo.vpsUser}@${repo.vpsHost}:/tmp/
 
                                         ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} "
-                                            sudo mkdir -p ${repo.webrootBase}/${env.name} &&
-                                            sudo tar -xzf /tmp/${env.name}.tar.gz -C ${repo.webrootBase}/${env.name} &&
-                                            rm /tmp/${env.name}.tar.gz
+                                            sudo mkdir -p ${repo.webrootBase}/${envConf.name} &&
+                                            sudo tar -xzf /tmp/${envConf.name}.tar.gz -C ${repo.webrootBase}/${envConf.name} &&
+                                            rm /tmp/${envConf.name}.tar.gz
                                         "
 
                                         # Restore ownership to root if needed (optional, usually keep as ubuntu:www-data)
                                         ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
-                                        "sudo chown -R www-data:www-data ${repo.webrootBase}/${env.name}"
+                                        "sudo chown -R www-data:www-data ${repo.webrootBase}/${envConf.name}"
                                     """
                                 }
                             }
@@ -196,24 +236,35 @@ pipeline {
         stage('Generate NGNIX config and deploy SSH') {
             steps {
                 script {
+                    def missing = env.MISSING_CERTS?.split(',') as List
+
                     repos.each { repo ->
                         dir(repo.folder) {
 
-                            repo.envs.each { env ->
-                                def domain = env.MAIN_DOMAIN.replaceAll(/^https?:\/\//, '').replaceAll(/\/$/, '')
-                                def tmpConfigFile = "${env.name}.conf"
+                            repo.envs.each { envConf ->
+                                def domain = envConf.MAIN_DOMAIN
+                                    .replaceAll(/^https?:\/\//, '')
+                                    .replaceAll(/\/$/, '')
+                                    .replaceAll(/^www\./, '')
+
+                                if (missing.contains(domain)) {
+                                    echo "⏭️ Skipping nginx config for ${envConf.name} (${domain}) due to missing cert"
+                                    return
+                                }
+
+                                def tmpConfigFile = "${envConf.name}.conf"
 
                                 // Replace placeholders
                                 def nginxConfig = ngnixTemplate
                                     .replace('{{DOMAIN}}', domain)
-                                    .replace('{{ENV_NAME}}', env.name)
+                                    .replace('{{ENV_NAME}}', envConf.name)
 
                                 // Write locally
                                 writeFile(file: tmpConfigFile, text: nginxConfig)
-                                echo "✅ Generated Nginx config for ${env.name} locally: ${tmpConfigFile}"
+                                echo "✅ Generated Nginx config for ${envConf.name} locally: ${tmpConfigFile}"
 
                                 // Print content locally
-                                echo "📄 Local nginx config content for ${env.name}:\n${nginxConfig}"
+                                echo "📄 Local nginx config content for ${envConf.name}:\n${nginxConfig}"
 
                                 sshagent(credentials: [repo.vpsCredId]) {
                                     sh """
