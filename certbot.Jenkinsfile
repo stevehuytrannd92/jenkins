@@ -22,7 +22,7 @@ pipeline {
                                 def exists = sh(
                                     script: """
                                         ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \
-                                        '[ -f /etc/letsencrypt/live/${site.MAIN_DOMAIN.replaceAll('https://','').replaceAll('/','')}/fullchain.pem ] && echo yes || echo no'
+                                        '[ -f /etc/letsencrypt/live/${site.name}/fullchain.pem ] && echo yes || echo no'
                                     """,
                                     returnStdout: true
                                 ).trim()
@@ -31,7 +31,6 @@ pipeline {
                                             ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
                                             "sudo certbot renew --deploy-hook \\"systemctl reload nginx\\""
                                         """
-                                    }
                                 } else {                                
                                     def tmpConfigFile = "${site.name}.conf"
 
