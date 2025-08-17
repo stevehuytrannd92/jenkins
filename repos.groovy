@@ -53,6 +53,29 @@ return [
         ]
 
     ],
+    [
+        url: 'git@github.com:trungplq/flockerz.git',
+        branch: 'wepe',
+        folder: 'wepe',
+        credId: 'id_ed25519_stevehuytrannd92',
+        vpsCredId: 'vps1',
+        vpsUser: 'ubuntu',
+        vpsHost: '165.154.235.205',
+        webrootBase: '/var/www/presale',
+        envs: [
+            [ 
+                name: 'wepetoken', 
+                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
+                LOGO_PATH:'/img/wepe/token.svg',
+                MAIN_DOMAIN:'https://wepetoken.com/',
+                MAIN_GTAG:'G-LJLVSX3D6T',
+                MAIN_SITENAME:'wepetoken',
+                MAIN_TWITTER:'@wepetoken',
+                OG_PATH:'/img/wepe/OG.jpeg'
+            ],
+        ]
+
+    ],
     // [
     //     url: 'git@github.com:stevehuytrannd92/flockerz.git',
     //     branch: 'btchyper',
