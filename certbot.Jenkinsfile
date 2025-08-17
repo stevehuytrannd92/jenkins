@@ -70,8 +70,10 @@ pipeline {
                                     // Ensure webroot folder and issue new cert
                                     sh """
                                         ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \\
-                                        "sudo mkdir -p ${repo.webrootBase}/${site.name} && \\
+                                        "sudo mkdir -p ${repo.webrootBase}/${site.name}/.well-known/acme-challenge && \\
                                          sudo chown -R www-data:www-data ${repo.webrootBase}/${site.name} && \\
+                                         sudo nginx -t && \\
+                                         sudo systemctl reload nginx && \\
                                          sudo certbot certonly --webroot -w ${repo.webrootBase}/${site.name} \\
                                          -d ${domain} -d www.${domain}"
                                     """
