@@ -95,18 +95,7 @@ pipeline {
                         parallelTasks["Pull-${repo.folder}"] = {
                             dir(repo.folder) {
                                 if (!fileExists('.git')) {
-                                    // First time clone
-                                    checkout([
-                                        $class: 'GitSCM',
-                                        branches: [[name: "*/${repo.branch}"]],
-                                        doGenerateSubmoduleConfigurations: false,
-                                        userRemoteConfigs: [[
-                                            url: repo.url,
-                                            credentialsId: repo.credId
-                                        ]]
-                                    ])
-                                } else {
-                                    // Fetch and compare
+                                    // First time clone (shallow)
                                     checkout([
                                         $class: 'GitSCM',
                                         branches: [[name: "*/${repo.branch}"]],
@@ -116,15 +105,31 @@ pipeline {
                                             credentialsId: repo.credId
                                         ]],
                                         extensions: [
-                                            [$class: 'WipeWorkspace'],
+                                            // Optimize repo checkout
+                                            [$class: 'CloneOption', depth: 1, noTags: true, shallow: true],
+                                            [$class: 'PruneStaleBranch']
+                                        ]
+                                    ])
+                                } else {
+                                    // Update existing repo (shallow fetch, no full reset)
+                                    checkout([
+                                        $class: 'GitSCM',
+                                        branches: [[name: "*/${repo.branch}"]],
+                                        doGenerateSubmoduleConfigurations: false,
+                                        userRemoteConfigs: [[
+                                            url: repo.url,
+                                            credentialsId: repo.credId
+                                        ]],
+                                        extensions: [
                                             [$class: 'PruneStaleBranch'],
-                                            [$class: 'CleanBeforeCheckout']
+                                            [$class: 'CloneOption', depth: 1, noTags: true, shallow: true]
                                         ]
                                     ])
                                 }
                             }
                         }
                     }
+
 
                     parallel parallelTasks
                 }
@@ -157,6 +162,13 @@ pipeline {
                                                 export CI=true
                                                 npm ci
                                                 npx next build && npx next-sitemap
+
+                                                # ✅ reduce .next size: remove heavy cache + traces
+                                                if [ -d .next ]; then
+                                                    rm -rf .next/cache || true
+                                                    rm -rf .next/server || true
+                                                    rm -rf .next/**/*.nft.json || true
+                                                fi
                                             else
                                                 echo "No package.json found, skipping build."
                                             fi
