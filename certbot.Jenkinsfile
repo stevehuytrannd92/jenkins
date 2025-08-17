@@ -63,6 +63,8 @@ pipeline {
                                             sudo nginx -t &&
                                             sudo systemctl reload nginx
                                         "
+                                        # Verify deployed config
+                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} "cat /etc/nginx/sites-available/${tmpConfigFile}"
                                     """
 
                                     // Ensure webroot folder and issue new cert
