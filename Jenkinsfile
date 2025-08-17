@@ -23,6 +23,19 @@ def isNewCommit(String repo, String newChangesRepo) {
     return repoList.contains(repo)
 }
 
+// Run a map of tasks with maxParallel at once
+def runWithMaxParallel(tasks, maxParallel = 3) {
+    def keys = tasks.keySet() as List
+    def total = keys.size()
+
+    for (int i = 0; i < total; i += maxParallel) {
+        def slice = keys.subList(i, Math.min(i + maxParallel, total))
+        def batch = [:]
+        slice.each { k -> batch[k] = tasks[k] }
+        parallel batch
+    }
+}
+
 pipeline {
     agent any
     tools {
@@ -151,7 +164,7 @@ pipeline {
                         }
                     }
 
-                    parallel parallelTasks
+                    runWithMaxParallel(parallelTasks, 3)  // 👈 cap parallelism
                     env.CHANGED_REPOS = changedRepos.join(',')
                     echo "📦 Changed repos: ${env.CHANGED_REPOS}"
                 }
@@ -220,7 +233,7 @@ pipeline {
                         }
                     }
 
-                    parallel parallelBuilds
+                    runWithMaxParallel(parallelTasks, 3)  // 👈 cap parallelism
                 }
             }
         }
