@@ -68,10 +68,10 @@ pipeline {
                         // save into env for later stages
 
                         // Trigger certbot handler in background
-                        build job: 'cerbot-handler',
-                            parameters: [],
-                            wait: false,
-                            propagate: false
+                        // build job: 'cerbot-handler',
+                        //     parameters: [],
+                        //     wait: false,
+                        //     propagate: false
                     } else {
                         echo "✅ All certificates present"
                     }
