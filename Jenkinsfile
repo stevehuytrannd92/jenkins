@@ -14,7 +14,14 @@ def isMissingCert(String domain, String missingCertsStr) {
     def domains = missingCertsStr.split(',').collect { it.trim() }
     return domains.contains(domain)
 }
-
+// Check if new comit
+def isNewCommit(String repo, String newChangesRepo) {
+    if (!newChangesRepo?.trim()) {
+        return false
+    }
+    def repoList = newChangesRepo.split(',').collect { it.trim() }
+    return repoList.contains(repo)
+}
 
 pipeline {
     agent any
@@ -22,9 +29,18 @@ pipeline {
         nodejs 'NODE_20'
     }
 
+    parameters {
+        booleanParam(
+            name: 'FORCE_BUILD_ALL',
+            defaultValue: false,
+            description: 'Force build & deploy all repos, even if no new changes'
+        )
+    }
+
     environment {
         // store missing domains across stages
         MISSING_CERTS = ""
+        CHANGED_REPOS = ""
     }
 
     stages {
@@ -48,7 +64,6 @@ pipeline {
                         repo.envs.each { site ->
                             def domain = extractDomain(site.MAIN_DOMAIN)
 
-
                             sshagent (credentials: [vpsInfo.vpsCredId]) {
                                 def exists = sh(
                                     script: """
@@ -70,14 +85,7 @@ pipeline {
 
                     if (missing) {
                         echo "⚠️  Some certificates are missing: ${missing.join(', ')}"
-                        // save into env for later stages
                         env.MISSING_CERTS = missing.join(',')
-
-                        // Trigger certbot handler in background
-                        // build job: 'cerbot-handler',
-                        //     parameters: [],
-                        //     wait: false,
-                        //     propagate: false
                     } else {
                         echo "✅ All certificates present"
                     }
@@ -86,19 +94,18 @@ pipeline {
         }
 
         stage('Repos Pulls') {
-            when {
-                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
-            }
             steps {
                 script {
                     def parallelTasks = [:]
+                    def changedRepos = []
 
                     repos.each { repo ->
                         parallelTasks["Pull-${repo.folder}"] = {
                             dir(repo.folder) {
                                 def vpsInfo = vpsInfos[repo.vpsRef]
+
                                 if (!fileExists('.git')) {
-                                    // First time clone (shallow)
+                                    // First time clone
                                     checkout([
                                         $class: 'GitSCM',
                                         branches: [[name: "*/${repo.branch}"]],
@@ -113,8 +120,10 @@ pipeline {
                                             [$class: 'PruneStaleBranch']
                                         ]
                                     ])
+                                    changedRepos << repo.folder
                                 } else {
-                                    // Update existing repo (shallow fetch, no full reset)
+                                    def oldCommit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+
                                     checkout([
                                         $class: 'GitSCM',
                                         branches: [[name: "*/${repo.branch}"]],
@@ -128,17 +137,26 @@ pipeline {
                                             [$class: 'CloneOption', depth: 1, noTags: true, shallow: true]
                                         ]
                                     ])
+
+                                    def newCommit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+
+                                    if (oldCommit != newCommit) {
+                                        echo "🔄 Changes detected in ${repo.folder}: ${oldCommit} → ${newCommit}"
+                                        changedRepos << repo.folder
+                                    } else {
+                                        echo "⏭️ No changes in ${repo.folder}"
+                                    }
                                 }
                             }
                         }
                     }
 
-
                     parallel parallelTasks
+                    env.CHANGED_REPOS = changedRepos.join(',')
+                    echo "📦 Changed repos: ${env.CHANGED_REPOS}"
                 }
             }
         }
-
 
         stage('Build Projects') {
             steps {
@@ -147,8 +165,12 @@ pipeline {
 
                     repos.each { repo ->
                         parallelBuilds["Repo-${repo.folder}"] = {
-                            def vpsInfo = vpsInfos[repo.vpsRef]
+                            if (!params.FORCE_BUILD_ALL && !isNewCommit(repo.folder, env.CHANGED_REPOS)) {
+                                echo "⏭️ Skipping build for ${repo.folder}, no changes detected"
+                                return
+                            }
 
+                            def vpsInfo = vpsInfos[repo.vpsRef]
                             dir(repo.folder) {
                                 repo.envs.each { envConf ->
                                     def domain = extractDomain(envConf.MAIN_DOMAIN)
@@ -167,7 +189,6 @@ pipeline {
                                                 npm ci
                                                 npx next build && npx next-sitemap
 
-                                                # ✅ reduce .next size: remove heavy cache + traces
                                                 if [ -d .next ]; then
                                                     rm -rf .next/cache || true
                                                     rm -rf .next/server || true
@@ -204,19 +225,22 @@ pipeline {
             }
         }
 
-
         stage('Deploy Outs to VPS') {
             steps {
                 script {
                     repos.each { repo ->
-                        def vpsInfo = vpsInfos[repo.vpsRef]
+                        if (!params.FORCE_BUILD_ALL && !isNewCommit(repo.folder, env.CHANGED_REPOS)) {
+                            echo "⏭️ Skipping deploy for ${repo.folder}, no changes detected"
+                            return
+                        }
 
+                        def vpsInfo = vpsInfos[repo.vpsRef]
                         dir(repo.folder) {
                             repo.envs.each { envConf ->
                                 def domain = extractDomain(envConf.MAIN_DOMAIN)
 
                                 if (isMissingCert(domain, env.MISSING_CERTS)) {
-                                    echo "⏭️ Skipping build for ${envConf.name} (${domain}) due to missing cert"
+                                    echo "⏭️ Skipping deploy for ${envConf.name} (${domain}) due to missing cert"
                                     return
                                 }
 
@@ -247,14 +271,18 @@ pipeline {
             steps {
                 script {
                     repos.each { repo ->
-                        def vpsInfo = vpsInfos[repo.vpsRef]
+                        if (!params.FORCE_BUILD_ALL && !isNewCommit(repo.folder, env.CHANGED_REPOS)) {
+                            echo "⏭️ Skipping nginx config for ${repo.folder}, no changes detected"
+                            return
+                        }
 
+                        def vpsInfo = vpsInfos[repo.vpsRef]
                         dir(repo.folder) {
                             repo.envs.each { envConf ->
                                 def domain = extractDomain(envConf.MAIN_DOMAIN)
 
                                 if (isMissingCert(domain, env.MISSING_CERTS)) {
-                                    echo "⏭️ Skipping build for ${envConf.name} (${domain}) due to missing cert"
+                                    echo "⏭️ Skipping nginx config for ${envConf.name} (${domain}) due to missing cert"
                                     return
                                 }
 
