@@ -234,7 +234,7 @@ pipeline {
                         }
                     }
 
-                    runWithMaxParallel(parallelTasks, 3)  // 👈 cap parallelism
+                    runWithMaxParallel(parallelBuilds, 3)  // 👈 cap parallelism
                 }
             }
         }
