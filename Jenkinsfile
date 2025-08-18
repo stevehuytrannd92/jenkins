@@ -156,7 +156,6 @@ def generateNginxConfigs() {
                             for f in /etc/nginx/sites-enabled/*; do
                                 if grep -qE \\"server_name .*(${domain}).*;\\" \"\$f\"; then
                                     echo 'Removing conflicting site: \$f'
-                                    sudo rm -f \"\$f\"
                                 fi
                             done
 
