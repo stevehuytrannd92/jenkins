@@ -183,7 +183,10 @@ pipeline {
                                 // Normalize and parse to boolean
                                 def isChanged = val?.toLowerCase() in ["true", "1", "yes"]
                                 if (isChanged) {
+                                    echo "📦 Changed repo ${repo.folder}"
+
                                     changedRepos << repo.folder
+
                                 }
                             }
                         }
