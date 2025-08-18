@@ -440,7 +440,7 @@ pipeline {
                         }
                     }
 
-                    vpsInfos.each{ vpsInfo -> 
+                    vpsInfos.each { vpsInfo -> 
                         sshagent(credentials: [vpsInfo.vpsCredId]) {
                             sh """
                                 ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "
