@@ -138,6 +138,62 @@ pipeline {
             }
         }
 
+
+        stage('Debug Generate NGNIX config and deploy SSH') {
+            steps {
+                script {
+                    repos.each { repo ->
+                        if (!params.FORCE_BUILD_ALL && !isNewCommit(repo.folder)) {
+                            echo "⏭️ Skipping nginx config for ${repo.folder}, no changes detected"
+                            return
+                        }
+
+                        def vpsInfo = vpsInfos[repo.vpsRef]
+                        dir(repo.folder) {
+                            repo.envs.each { envConf ->
+                                def domain = extractDomain(envConf.MAIN_DOMAIN)
+
+                                if (isMissingCert(domain)) {
+                                    echo "⏭️ Skipping nginx config for ${envConf.name} (${domain}) due to missing cert"
+                                    return
+                                }
+
+                                def tmpConfigFile = "${envConf.name}.conf"
+                                def nginxConfig = ngnixTemplate
+                                    .replace('{{DOMAIN}}', domain)
+                                    .replace('{{ENV_NAME}}', envConf.name)
+                                    .replace('{{WEBROOT_BASE}}', vpsInfo.webrootBase)
+
+
+                                writeFile(file: tmpConfigFile, text: nginxConfig)
+                                echo "✅ Generated Nginx config for ${envConf.name} locally: ${tmpConfigFile}"
+                                echo "📄 Local nginx config content for ${envConf.name}:\n${nginxConfig}"
+
+                                sshagent(credentials: [vpsInfo.vpsCredId]) {
+                                    sh """
+                                        scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${vpsInfo.vpsUser}@${vpsInfo.vpsHost}:/home/${vpsInfo.vpsUser}/${tmpConfigFile}
+                                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "
+                                            sudo mv /home/${vpsInfo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
+                                            sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile} &&
+
+                                            # 👉 test only this config
+                                            sudo nginx -t -c /etc/nginx/sites-available/${tmpConfigFile} &&
+
+                                            # 👉 activate only this site
+                                            sudo ln -sf /etc/nginx/sites-available/${tmpConfigFile} /etc/nginx/sites-enabled/${tmpConfigFile} 
+
+                                        "
+                                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "cat /etc/nginx/sites-available/${tmpConfigFile}"
+                                    """
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         stage('Repos Pulls') {
             steps {
                 script {
