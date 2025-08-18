@@ -178,8 +178,11 @@ pipeline {
                         dir(repo.folder) {
                             if (fileExists("${repo.folder}.changed")) {
                                 def val = readFile("${repo.folder}.changed").trim()
-                                echo "📦 Changed file: ${val}"
-                                if (val.equalsIgnoreCase("true")) {
+                                echo "📦 Changed file raw: '${val}' (len=${val.length()})"
+
+                                // Normalize and parse to boolean
+                                def isChanged = val?.toLowerCase() in ["true", "1", "yes"]
+                                if (isChanged) {
                                     changedRepos << repo.folder
                                 }
                             }
