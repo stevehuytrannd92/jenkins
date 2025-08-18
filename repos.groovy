@@ -132,4 +132,33 @@ return [
 
     ],
     
+    [
+        url: 'git@github.com:stevehuytrannd92/flockerz.git',
+        branch: 'btcbull',
+        folder: 'btcbull',
+        credId: 'id_ed25519_stevehuytrannd92',
+        vpsCredId: 'vps1',
+        vpsUser: 'ubuntu',
+        vpsHost: '165.154.235.205',
+        webrootBase: '/var/www/presale',
+
+        vpsRef : 'vps1',   // 👈 just reference which VPS to use
+        envs: [
+            [ 
+                name: 'btcbull', 
+                MAIN_DOMAIN:'thebtcbull.com',
+                BACKLINKS_URL:'https://flockez.netlify.app/js/btcbullbacklinks.json',
+                LOGO_PATH:'/img/btcbull/logo.png',
+                MAIN_GTAG:'G-GR6Q9PM18Q',
+                MAIN_SITENAME:'btcbull',
+                MAIN_TWITTER:'@btcbull',
+                OG_PATH:'img/btcbull/OG.jpeg'
+            ],
+        ]
+
+    ],
+
 ]
+
+
+
