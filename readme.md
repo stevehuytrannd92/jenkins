@@ -66,8 +66,8 @@ docker exec -it jenkins-sandbox bash
 ls -lh /var/jenkins_home/workspace
 
 # remove old ones (careful!)
-rm -rf /var/jenkins_home/workspace/build-web-sites
-rm -rf /var/jenkins_home/workspace/build-web-sites@2
-rm -rf /var/jenkins_home/workspace/build-web-sites@2@tmp
-rm -rf /var/jenkins_home/workspace/build-web-sites@script
-rm -rf /var/jenkins_home/workspace/build-web-sites@tmp
+rm -rf /var/jenkins_home/workspace/build-web
+rm -rf /var/jenkins_home/workspace/build-web@script
+rm -rf /var/jenkins_home/workspace/build-web@tmp
+rm -rf /var/jenkins_home/workspace/build-web
+rm -rf /var/jenkins_home/workspace/build-web

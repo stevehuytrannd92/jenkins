@@ -110,7 +110,7 @@ pipeline {
                             sshagent (credentials: [vpsInfo.vpsCredId]) {
                                 def exists = sh(
                                     script: """
-                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} \
+                                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} \
                                         "sudo test -f /etc/letsencrypt/live/${domain}/fullchain.pem && echo yes || echo no"
                                     """,
                                     returnStdout: true
@@ -299,14 +299,14 @@ pipeline {
                                 }
 
                                 def envOut = "outs/${envConf.name}"
-                                echo "🚀 Deploying ${envOut} to ${repo.vpsHost}:${repo.webrootBase}/${envConf.name}"
+                                echo "🚀 Deploying ${envOut} to ${vpsInfo.vpsHost}:${repo.webrootBase}/${envConf.name}"
 
-                                sshagent (credentials: [repo.vpsCredId]) {
+                                sshagent (credentials: [vpsInfo.vpsCredId]) {
                                     sh """
                                         tar -czf ${envConf.name}.tar.gz -C outs/${envConf.name} .
-                                        scp -o StrictHostKeyChecking=no ${envConf.name}.tar.gz ${repo.vpsUser}@${repo.vpsHost}:/tmp/
+                                        scp -o StrictHostKeyChecking=no ${envConf.name}.tar.gz ${vpsInfo.vpsUser}@${vpsInfo.vpsHost}:/tmp/
 
-                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} "
+                                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "
                                             sudo mkdir -p ${repo.webrootBase}/${envConf.name} &&
                                             sudo tar -xzf /tmp/${envConf.name}.tar.gz -C ${repo.webrootBase}/${envConf.name} &&
                                             rm /tmp/${envConf.name}.tar.gz &&
@@ -349,17 +349,17 @@ pipeline {
                                 echo "✅ Generated Nginx config for ${envConf.name} locally: ${tmpConfigFile}"
                                 echo "📄 Local nginx config content for ${envConf.name}:\n${nginxConfig}"
 
-                                sshagent(credentials: [repo.vpsCredId]) {
+                                sshagent(credentials: [vpsInfo.vpsCredId]) {
                                     sh """
-                                        scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${repo.vpsUser}@${repo.vpsHost}:/home/${repo.vpsUser}/${tmpConfigFile}
-                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} "
-                                            sudo mv /home/${repo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
+                                        scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${vpsInfo.vpsUser}@${vpsInfo.vpsHost}:/home/${vpsInfo.vpsUser}/${tmpConfigFile}
+                                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "
+                                            sudo mv /home/${vpsInfo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
                                             sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile} &&
                                             sudo ln -sf /etc/nginx/sites-available/${tmpConfigFile} /etc/nginx/sites-enabled/${tmpConfigFile} &&
                                             sudo nginx -t &&
                                             sudo systemctl reload nginx
                                         "
-                                        ssh -o StrictHostKeyChecking=no ${repo.vpsUser}@${repo.vpsHost} "cat /etc/nginx/sites-available/${tmpConfigFile}"
+                                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "cat /etc/nginx/sites-available/${tmpConfigFile}"
                                     """
                                 }
                             }
