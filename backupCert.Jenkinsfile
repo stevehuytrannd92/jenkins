@@ -33,6 +33,7 @@ pipeline {
         }
 
         stage('Backup Certbot on all VPS') {
+            when { expression { return !params.DO_RESTORE } }
             steps {
                 script {
                     vpsInfos.each { vpsKey, vps ->
