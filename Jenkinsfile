@@ -228,7 +228,7 @@ pipeline {
 
                             def vpsInfo = vpsInfos[repo.vpsRef]
                             dir(repo.folder) {
-                                repo.envs.each { envConf, idx ->
+                                repo.envs.eachWithIndex { envConf, idx ->
                                     def domain = extractDomain(envConf.MAIN_DOMAIN)
 
                                     if (isMissingCert(domain)) {
