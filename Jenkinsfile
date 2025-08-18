@@ -377,6 +377,13 @@ pipeline {
                                             sudo mv /home/${vpsInfo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
                                             sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile} &&
 
+                                            # 👉 unlink any existing sites with the same domain
+                                            for f in /etc/nginx/sites-enabled/*; do
+                                                if grep -q 'server_name ${domain};' \"\$f\"; then
+                                                    sudo unlink \"\$f\"
+                                                fi
+                                            done
+
                                             # 👉 activate only this site
                                             sudo ln -sf /etc/nginx/sites-available/${tmpConfigFile} /etc/nginx/sites-enabled/${tmpConfigFile} 
 
