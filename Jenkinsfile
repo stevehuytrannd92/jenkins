@@ -1,3 +1,6 @@
+import groovy.transform.Field
+
+
 @Field def changedRepos = []
 
 
@@ -207,6 +210,7 @@ pipeline {
                     //         }
                     //     }
                     // }
+                    echo "Collected repos = ${changedRepos}"
 
                     // def joined = changedRepos ? changedRepos.join(',') : ""
                     // env.CHANGED_REPOS = joined as String
