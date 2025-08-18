@@ -233,7 +233,7 @@ pipeline {
 
                             def vpsInfo = vpsInfos[repo.vpsRef]
                             dir(repo.folder) {
-                                repo.envs.each { envConf ->
+                                repo.envs.each { envConf, idx ->
                                     def domain = extractDomain(envConf.MAIN_DOMAIN)
 
                                     if (isMissingCert(domain, env.MISSING_CERTS)) {
@@ -244,21 +244,38 @@ pipeline {
                                     echo "=== Building ${repo.folder} branch >>${repo.branch}<< for environment: ${envConf.name} ==="
 
                                     withEnv(envConf.collect { k,v -> "${k.toUpperCase()}=${v}" } ) {
-                                        sh '''
-                                            if [ -f package.json ]; then
-                                                export CI=true
-                                                npm ci
-                                                npx next build && npx next-sitemap
+                                        if (idx == 0) {
+                                            // 👉 First env: full CI build
+                                            sh '''
+                                                if [ -f package.json ]; then
+                                                    export CI=true
+                                                    npm ci
+                                                    npx next build && npx next-sitemap
 
-                                                if [ -d .next ]; then
-                                                    rm -rf .next/cache || true
-                                                    rm -rf .next/server || true
-                                                    rm -rf .next/**/*.nft.json || true
+                                                    if [ -d .next ]; then
+                                                        rm -rf .next/cache || true
+                                                        rm -rf .next/server || true
+                                                        rm -rf .next/**/*.nft.json || true
+                                                    fi
+                                                else
+                                                    echo "No package.json found, skipping build."
                                                 fi
-                                            else
-                                                echo "No package.json found, skipping build."
-                                            fi
-                                        '''
+                                            '''
+                                        } else {
+                                            sh '''
+                                                if [ -f package.json ]; then
+                                                    npx next build && npx next-sitemap
+
+                                                    if [ -d .next ]; then
+                                                        rm -rf .next/cache || true
+                                                        rm -rf .next/server || true
+                                                        rm -rf .next/**/*.nft.json || true
+                                                    fi
+                                                else
+                                                    echo "No package.json found, skipping build."
+                                                fi
+                                            '''                                        
+                                        }
 
                                         def envOut = "outs/${envConf.name}"
                                         sh """
