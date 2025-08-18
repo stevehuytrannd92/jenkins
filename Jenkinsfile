@@ -374,13 +374,20 @@ pipeline {
                                         ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "
                                             sudo mv /home/${vpsInfo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
                                             sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile} &&
+
+                                            # 👉 test only this config
+                                            sudo nginx -t -c /etc/nginx/sites-available/${tmpConfigFile} &&
+
+                                            # 👉 activate only this site
                                             sudo ln -sf /etc/nginx/sites-available/${tmpConfigFile} /etc/nginx/sites-enabled/${tmpConfigFile} &&
-                                            sudo nginx -t &&
+
+                                            # 👉 reload nginx once (affects all, but only after this site passed syntax check)
                                             sudo systemctl reload nginx
                                         "
                                         ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "cat /etc/nginx/sites-available/${tmpConfigFile}"
                                     """
                                 }
+
                             }
                         }
                     }
