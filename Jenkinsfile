@@ -318,7 +318,7 @@ pipeline {
                                 }
 
                                 def envOut = "outs/${envConf.name}"
-                                echo "🚀 Deploying ${envOut} to ${vpsInfo.vpsHost}:${repo.webrootBase}/${envConf.name}"
+                                echo "🚀 Deploying ${envOut} to ${vpsInfo.vpsHost}:${vpsInfo.webrootBase}/${envConf.name}"
 
                                 sshagent (credentials: [vpsInfo.vpsCredId]) {
                                     sh """
@@ -326,10 +326,10 @@ pipeline {
                                         scp -o StrictHostKeyChecking=no ${envConf.name}.tar.gz ${vpsInfo.vpsUser}@${vpsInfo.vpsHost}:/tmp/
 
                                         ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "
-                                            sudo mkdir -p ${repo.webrootBase}/${envConf.name} &&
-                                            sudo tar -xzf /tmp/${envConf.name}.tar.gz -C ${repo.webrootBase}/${envConf.name} &&
+                                            sudo mkdir -p ${vpsInfo.webrootBase}/${envConf.name} &&
+                                            sudo tar -xzf /tmp/${envConf.name}.tar.gz -C ${vpsInfo.webrootBase}/${envConf.name} &&
                                             rm /tmp/${envConf.name}.tar.gz &&
-                                            sudo chown -R www-data:www-data ${repo.webrootBase}/${envConf.name}
+                                            sudo chown -R www-data:www-data ${vpsInfo.webrootBase}/${envConf.name}
                                         "
                                     """
                                 }
