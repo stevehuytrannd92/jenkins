@@ -230,7 +230,6 @@ pipeline {
                             dir(repo.folder) {
                                 repo.envs.each { envConf, idx ->
                                     def domain = extractDomain(envConf.MAIN_DOMAIN)
-                                    echo "⚠️  Some certificates are missing: ${missing.join(', ')}"
 
                                     if (isMissingCert(domain)) {
                                         echo "⏭️ Skipping build for ${envConf.name} (${domain}) due to missing cert"
