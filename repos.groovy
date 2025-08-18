@@ -34,10 +34,6 @@ return [
         branch: 'btcswift',
         folder: 'btcswift',
         credId: 'id_ed25519_stevehuytrannd92',
-        vpsCredId: 'vps1',
-        vpsUser: 'ubuntu',
-        vpsHost: '165.154.235.205',
-        webrootBase: '/var/www/presale',
 
         vpsRef : 'vps1',   // 👈 just reference which VPS to use
 
