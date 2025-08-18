@@ -94,7 +94,6 @@ def generateNginxConfigs1() {
                             for f in /etc/nginx/sites-enabled/*; do
                                 if grep -qE "server_name .*(${domain}).*;" "$f"; then
                                     echo "Removing conflicting site: $f"
-                                    sudo rm -f "$f"
                                 fi
                             done
 
@@ -149,8 +148,6 @@ def generateNginxConfigs() {
 
                         # SSH into VPS and deploy
                         ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "
-                            DOMAIN='${domain}'
-                            CONFIG_FILE='${tmpConfigFile}'
 
                             # 👉 Remove all conflicting enabled sites for this domain
                             for f in /etc/nginx/sites-enabled/*; do
@@ -159,12 +156,12 @@ def generateNginxConfigs() {
                                 fi
                             done
 
-                            # 👉 Move new config to sites-available
-                            sudo mv /home/${vpsInfo.vpsUser}/\$CONFIG_FILE /etc/nginx/sites-available/\$CONFIG_FILE
-                            sudo chown root:root /etc/nginx/sites-available/\$CONFIG_FILE
+                            sudo mv /home/${vpsInfo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
+                            sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile} &&
 
-                            # 👉 Enable only this site
-                            sudo ln -sf /etc/nginx/sites-available/\$CONFIG_FILE /etc/nginx/sites-enabled/\$CONFIG_FILE
+
+                            # 👉 activate only this site
+                            sudo ln -sf /etc/nginx/sites-available/${tmpConfigFile} /etc/nginx/sites-enabled/${tmpConfigFile} 
                         "
 
                         # Optional: view deployed config
