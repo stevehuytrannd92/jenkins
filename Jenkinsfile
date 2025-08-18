@@ -195,9 +195,12 @@ pipeline {
                         }
                     }
 
-                    env.CHANGED_REPOS = "${changedRepos.join(',')}"
-                    echo "📦 Changed repos: ${changedRepos.join(',')}"
-                    echo "📦 Changed repos: ${env.CHANGED_REPOS}"
+                    def joined = changedRepos ? changedRepos.join(',') : ""
+                    env.CHANGED_REPOS = "${joined}"
+                    echo "📦 Local changedRepos: ${changedRepos}"
+                    echo "📦 Joined string: '${joined}' (len=${joined.length()})"
+                    echo "📦 env.CHANGED_REPOS: '${env.CHANGED_REPOS}'"
+
                 }
             }
         }
