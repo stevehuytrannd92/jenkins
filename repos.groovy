@@ -158,6 +158,69 @@ return [
                 MAIN_TWITTER:'@btcbull',
                 OG_PATH:'img/btcbull/OG.jpeg'
             ],
+            [
+                MAIN_DOMAIN:'https://btcbulltoken.net/',
+                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks3.json',
+                LOGO_PATH:'/img/btcbull/logo.png',
+                MAIN_GTAG:'G-GR6Q9PM18Q',
+                MAIN_SITENAME:'btcbull',
+                MAIN_TWITTER:'@btcbull',
+                OG_PATH:'img/btcbull/OG.jpeg'
+            ],
+            [
+                MAIN_DOMAIN:'https://btcbullpresale.com/',
+                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks3.json',
+                LOGO_PATH:'/img/btcbull/logo.png',
+                MAIN_GTAG:'G-GR6Q9PM18Q',
+                MAIN_SITENAME:'btcbull',
+                MAIN_TWITTER:'@btcbull',
+                OG_PATH:'img/btcbull/OG.jpeg'
+            ],
+            [
+                MAIN_DOMAIN:'https://btcbullmeme.com/',
+                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks3.json',
+                LOGO_PATH:'/img/btcbull/logo.png',
+                MAIN_GTAG:'G-GR6Q9PM18Q',
+                MAIN_SITENAME:'btcbull',
+                MAIN_TWITTER:'@btcbull',
+                OG_PATH:'img/btcbull/OG.jpeg'
+            ],
+            [
+                MAIN_DOMAIN:'https://btcbullcoins.com/',
+                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks3.json',
+                LOGO_PATH:'/img/btcbull/logo.png',
+                MAIN_GTAG:'G-GR6Q9PM18Q',
+                MAIN_SITENAME:'btcbull',
+                MAIN_TWITTER:'@btcbull',
+                OG_PATH:'img/btcbull/OG.jpeg'
+            ],
+            [
+                MAIN_DOMAIN:'https://btcbulls.net/',
+                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks3.json',
+                LOGO_PATH:'/img/btcbull/logo.png',
+                MAIN_GTAG:'G-GR6Q9PM18Q',
+                MAIN_SITENAME:'btcbull',
+                MAIN_TWITTER:'@btcbull',
+                OG_PATH:'img/btcbull/OG.jpeg'
+            ],
+            [
+                MAIN_DOMAIN:'https://bitcoinbull.info/',
+                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks3.json',
+                LOGO_PATH:'/img/btcbull/logo.png',
+                MAIN_GTAG:'G-GR6Q9PM18Q',
+                MAIN_SITENAME:'btcbull',
+                MAIN_TWITTER:'@btcbull',
+                OG_PATH:'img/btcbull/OG.jpeg'
+            ],
+            [
+                MAIN_DOMAIN:'https://btcbull.fun/',
+                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks3.json',
+                LOGO_PATH:'/img/btcbull/logo.png',
+                MAIN_GTAG:'G-GR6Q9PM18Q',
+                MAIN_SITENAME:'btcbull',
+                MAIN_TWITTER:'@btcbull',
+                OG_PATH:'img/btcbull/OG.jpeg'
+            ],
         ]
 
     ],
