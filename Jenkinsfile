@@ -255,26 +255,26 @@ pipeline {
             }
         }
 
-        stage('Debug Generate NGNIX config and deploy SSH') {
-            steps {
-                script {
-                    generateNginxConfigs()
+        // stage('Debug Generate NGNIX config and deploy SSH') {
+        //     steps {
+        //         script {
+        //             generateNginxConfigs()
 
-                    vpsInfos.values().each { vpsConf -> 
-                        sshagent(credentials: [vpsConf.vpsCredId]) {
-                            sh """
-                                ssh -o StrictHostKeyChecking=no ${vpsConf.vpsUser}@${vpsConf.vpsHost} "
+        //             vpsInfos.values().each { vpsConf -> 
+        //                 sshagent(credentials: [vpsConf.vpsCredId]) {
+        //                     sh """
+        //                         ssh -o StrictHostKeyChecking=no ${vpsConf.vpsUser}@${vpsConf.vpsHost} "
 
-                                    sudo nginx -t &&
+        //                             sudo nginx -t &&
 
-                                    sudo systemctl reload nginx
-                                "
-                            """
-                        }
-                    }
-                }
-            }
-        }
+        //                             sudo systemctl reload nginx
+        //                         "
+        //                     """
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
 
 
         stage('Repos Pulls') {
