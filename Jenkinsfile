@@ -218,6 +218,44 @@ pipeline {
             }
         }
 
+        stage('Verify Domains') {
+            steps {
+                script {
+                    def domainMap = [:]
+                    def duplicates = []
+
+                    repos.each { repo ->
+                        repo.envs.each { env ->
+                            def domain = env.MAIN_DOMAIN
+                                .replaceAll(/^https?:\/\//, '')   // remove protocol
+                                .replaceAll(/\/$/, '')            // remove trailing slash
+                                .toLowerCase()
+
+                            if (domainMap.containsKey(domain)) {
+                                duplicates << [
+                                    domain: domain,
+                                    repo1: domainMap[domain],
+                                    repo2: "${repo.folder}:${env.name}"
+                                ]
+                            } else {
+                                domainMap[domain] = "${repo.folder}:${env.name}"
+                            }
+                        }
+                    }
+
+                    if (duplicates) {
+                        echo "❌ Found duplicate MAIN_DOMAIN(s):"
+                        duplicates.each { d ->
+                            echo " - ${d.domain} used in ${d.repo1} and ${d.repo2}"
+                        }
+                        error("Duplicate MAIN_DOMAIN detected, aborting build.")
+                    } else {
+                        echo "✅ All MAIN_DOMAIN values are unique."
+                    }
+                }
+            }
+        }
+
         stage('Check Certificates') {
             steps {
                 script {
