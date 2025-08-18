@@ -58,62 +58,6 @@ def runWithMaxParallel(tasks, maxParallel = 3) {
     }
 }
 
-def generateNginxConfigs1() {
-    repos.each { repo ->
-        if (!params.FORCE_BUILD_ALL && !isNewCommit(repo.folder)) {
-            echo "⏭️ Skipping nginx config for ${repo.folder}, no changes detected"
-            return
-        }
-
-        def vpsInfo = vpsInfos[repo.vpsRef]
-        dir(repo.folder) {
-            repo.envs.each { envConf ->
-                def domain = extractDomain(envConf.MAIN_DOMAIN)
-
-                if (isMissingCert(domain)) {
-                    echo "⏭️ Skipping nginx config for ${envConf.name} (${domain}) due to missing cert"
-                    return
-                }
-
-                def tmpConfigFile = "${envConf.name}.conf"
-                def nginxConfig = ngnixTemplate
-                    .replace('{{DOMAIN}}', domain)
-                    .replace('{{ENV_NAME}}', envConf.name)
-                    .replace('{{WEBROOT_BASE}}', vpsInfo.webrootBase)
-
-
-                writeFile(file: tmpConfigFile, text: nginxConfig)
-                echo "✅ Generated Nginx config for ${envConf.name} locally: ${tmpConfigFile}"
-                echo "📄 Local nginx config content for ${envConf.name}:\n${nginxConfig}"
-
-                sshagent(credentials: [vpsInfo.vpsCredId]) {
-                    sh """
-                        scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${vpsInfo.vpsUser}@${vpsInfo.vpsHost}:/home/${vpsInfo.vpsUser}/${tmpConfigFile}
-                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "
-                            # 👉 unlink any existing sites with the same domain
-                            for f in /etc/nginx/sites-enabled/*; do
-                                if grep -qE "server_name .*(${domain}).*;" "$f"; then
-                                    echo "Removing conflicting site: $f"
-                                fi
-                            done
-
-                            sudo mv /home/${vpsInfo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
-                            sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile} &&
-
-                            
-                            # 👉 activate only this site
-                            sudo ln -sf /etc/nginx/sites-available/${tmpConfigFile} /etc/nginx/sites-enabled/${tmpConfigFile} 
-
-                        "
-                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "cat /etc/nginx/sites-available/${tmpConfigFile}"
-                    """
-                }
-
-            }
-        }
-    }
-}
-
 def generateNginxConfigs() {
     repos.each { repo ->
         if (!params.FORCE_BUILD_ALL && !isNewCommit(repo.folder)) {
@@ -214,6 +158,20 @@ pipeline {
                     repos = load 'repos.groovy'
                     vpsInfos = load 'vps.groovy'
                     ngnixTemplate = readFile('ngnix/https.template.conf')
+                }
+            }
+        }
+
+
+        stage('Verify repo envs') {
+            steps {
+                script {
+                    repos.each { repo ->
+                        if (repo.envs.size() > 16) {
+                            error "❌ Repo '${repo.folder}' has ${repo.envs.size()} envs, exceeds limit of 16."
+                        }
+                    }
+                    echo "✅ All repos have ≤ 16 envs."
                 }
             }
         }
