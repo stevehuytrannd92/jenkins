@@ -175,10 +175,12 @@ pipeline {
                     // Merge after parallel by reading files
                     def changedRepos = []
                     repos.each { repo ->
-                        if (fileExists("${repo.folder}.changed")) {
-                            def val = readFile("${repo.folder}.changed").trim()
-                            if (val == "true") {
-                                changedRepos << repo.folder
+                        dir(repo.folder) {
+                            if (fileExists("${repo.folder}.changed")) {
+                                def val = readFile("${repo.folder}.changed").trim()
+                                if (val == "true") {
+                                    changedRepos << repo.folder
+                                }
                             }
                         }
                     }
