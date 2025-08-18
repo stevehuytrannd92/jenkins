@@ -51,29 +51,29 @@ pipeline {
             }
         }
 
-        stage('Restore Latest Backup') {
-            when { expression { return params.RESTORE_VPS != 'none' } }
-            steps {
-                script {
-                    def vps = vpsInfos[params.RESTORE_VPS]
-                    sshagent(credentials: [vps.vpsCredId]) {
-                        sh """
-                            ssh -o StrictHostKeyChecking=no ${vps.vpsUser}@${vps.vpsHost} '
-                                LATEST=\$(ls -1t ${BACKUP_DIR}/certbot-backup-*.tar.gz | head -n1) &&
-                                if [ -f "\$LATEST" ]; then
-                                    echo "Restoring \$LATEST on ${params.RESTORE_VPS} ..."
-                                    sudo tar -xzf "\$LATEST" -C / &&
-                                    sudo chown -R root:root /etc/letsencrypt &&
-                                    sudo chmod -R 700 /etc/letsencrypt
-                                else
-                                    echo "⚠️ No backup found to restore."
-                                fi
-                            '
-                        """
-                    }
-                    echo "✅ Restore complete for VPS: ${params.RESTORE_VPS}"
-                }
-            }
-        }
+        // stage('Restore Latest Backup') {
+        //     when { expression { return params.RESTORE_VPS != 'none' } }
+        //     steps {
+        //         script {
+        //             def vps = vpsInfos[params.RESTORE_VPS]
+        //             sshagent(credentials: [vps.vpsCredId]) {
+        //                 sh """
+        //                     ssh -o StrictHostKeyChecking=no ${vps.vpsUser}@${vps.vpsHost} '
+        //                         LATEST=\$(ls -1t ${BACKUP_DIR}/certbot-backup-*.tar.gz | head -n1) &&
+        //                         if [ -f "\$LATEST" ]; then
+        //                             echo "Restoring \$LATEST on ${params.RESTORE_VPS} ..."
+        //                             sudo tar -xzf "\$LATEST" -C / &&
+        //                             sudo chown -R root:root /etc/letsencrypt &&
+        //                             sudo chmod -R 700 /etc/letsencrypt
+        //                         else
+        //                             echo "⚠️ No backup found to restore."
+        //                         fi
+        //                     '
+        //                 """
+        //             }
+        //             echo "✅ Restore complete for VPS: ${params.RESTORE_VPS}"
+        //         }
+        //     }
+        // }
     }
 }

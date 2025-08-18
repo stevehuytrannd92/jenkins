@@ -71,3 +71,11 @@ rm -rf /var/jenkins_home/workspace/build-web@script
 rm -rf /var/jenkins_home/workspace/build-web@tmp
 rm -rf /var/jenkins_home/workspace/build-web
 rm -rf /var/jenkins_home/workspace/build-web
+
+
+
+# handle link ngnix:
+ls -l /etc/nginx/sites-enabled/
+sudo rm -r /etc/nginx/sites-enabled/sites-available
+sudo nginx -t
+sudo systemctl reload nginx
