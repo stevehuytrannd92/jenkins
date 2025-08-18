@@ -111,13 +111,13 @@ pipeline {
             steps {
                 script {
                     def parallelTasks = [:]
-                    def results = [:]
 
 
                     repos.each { repo ->
                         parallelTasks["Pull-${repo.folder}"] = {
                             dir(repo.folder) {
                                 def vpsInfo = vpsInfos[repo.vpsRef]
+                                def changed = false
 
                                 if (!fileExists('.git')) {
                                     // First time clone
@@ -135,7 +135,7 @@ pipeline {
                                             [$class: 'PruneStaleBranch']
                                         ]
                                     ])
-                                    results[repo.folder] = true
+                                    changed = true  
                                 } else {
                                     def oldCommit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
 
@@ -157,20 +157,32 @@ pipeline {
 
                                     if (oldCommit != newCommit) {
                                         echo "🔄 Changes detected in ${repo.folder}: ${oldCommit} → ${newCommit}"
-                                        results[repo.folder] = true
+                                        changed = true
                                     } else {
                                         echo "⏭️ No changes in ${repo.folder}"
-                                        results[repo.folder] = false
+                                        changed = false
 
                                     }
                                 }
+
+                                // 👇 write result to a file for later collection
+                                writeFile file: "${repo.folder}.changed", text: changed.toString()
                             }
                         }
                     }
 
                     runWithMaxParallel(parallelTasks, 3)  // 👈 cap parallelism
-                    // Merge after parallel
-                    def changedRepos = results.findAll { k, v -> v }.keySet() as List
+                    // Merge after parallel by reading files
+                    def changedRepos = []
+                    repos.each { repo ->
+                        if (fileExists("${repo.folder}.changed")) {
+                            def val = readFile("${repo.folder}.changed").trim()
+                            if (val == "true") {
+                                changedRepos << repo.folder
+                            }
+                        }
+                    }
+
                     env.CHANGED_REPOS = changedRepos.join(',')
                     echo "📦 Changed repos: ${env.CHANGED_REPOS}"
                 }
