@@ -89,7 +89,7 @@ pipeline {
     }
 
     triggers {
-        cron('H/15 * * * *')  // runs every 15 minutes
+        cron('0,15,30,45 * * * *')
     }
 
 
