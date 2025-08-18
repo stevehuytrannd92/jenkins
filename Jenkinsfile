@@ -76,6 +76,13 @@ pipeline {
 
     }
 
+    options {
+        disableConcurrentBuilds()   // 🚫 no concurrent runs
+        // buildDiscarder(logRotator(numToKeepStr: '10')) // optional cleanup
+        // timeout(time: 60, unit: 'MINUTES')            // optional safety
+    }
+
+
     environment {
         // store missing domains across stages
         MISSING_CERTS = ""

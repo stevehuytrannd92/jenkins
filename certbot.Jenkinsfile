@@ -3,6 +3,14 @@ pipeline {
     triggers {
         cron('30 2 * * *')
     }
+
+    options {
+        disableConcurrentBuilds()   // 🚫 no concurrent runs
+        // buildDiscarder(logRotator(numToKeepStr: '10')) // optional cleanup
+        // timeout(time: 60, unit: 'MINUTES')            // optional safety
+    }
+
+
     stages {
         stage('Load Script') {
             steps {
