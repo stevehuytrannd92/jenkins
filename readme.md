@@ -59,3 +59,15 @@ ssh -i keys/Test123.pem root@165.154.235.205
 
 sudo certbot certonly --webroot -w /var/www/presale/btcswifts -d btcswifts.com -d www.btcswifts.com
 
+
+docker exec -it jenkins-sandbox bash
+
+# list workspaces
+ls -lh /var/jenkins_home/workspace
+
+# remove old ones (careful!)
+rm -rf /var/jenkins_home/workspace/build-web-sites
+rm -rf /var/jenkins_home/workspace/build-web-sites@2
+rm -rf /var/jenkins_home/workspace/build-web-sites@2@tmp
+rm -rf /var/jenkins_home/workspace/build-web-sites@script
+rm -rf /var/jenkins_home/workspace/build-web-sites@tmp

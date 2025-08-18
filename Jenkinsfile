@@ -1,3 +1,6 @@
+@Field def changedRepos = []
+
+
 // --- Helper functions ---
 def extractDomain(String url) {
     return url
@@ -15,16 +18,23 @@ def isMissingCert(String domain, String missingCertsStr) {
     return domains.contains(domain)
 }
 // Check if new comit
-def isNewCommit(String repo, String newChangesRepo) {
-    if (!newChangesRepo?.trim()) {
+// def isNewCommit(String repo, String newChangesRepo) {
+//     if (!newChangesRepo?.trim()) {
+//         return false
+//     }
+//     def repoList = newChangesRepo.split(',')
+//         .collect { it.trim().toLowerCase() }
+//         .findAll { it }  // drop empty strings
+//     return repoList.contains(repo.toLowerCase())
+// }
+
+
+def isNewCommit(String repo) {
+    if (!changedRepos || changedRepos.isEmpty()) {
         return false
     }
-    def repoList = newChangesRepo.split(',')
-        .collect { it.trim().toLowerCase() }
-        .findAll { it }  // drop empty strings
-    return repoList.contains(repo.toLowerCase())
+    return changedRepos*.toLowerCase().contains(repo.toLowerCase())
 }
-
 
 // Run a map of tasks with maxParallel at once
 def runWithMaxParallel(tasks, maxParallel = 3) {
@@ -118,9 +128,9 @@ pipeline {
 
                     repos.each { repo ->
                         parallelTasks["Pull-${repo.folder}"] = {
+                            def changed = false
                             dir(repo.folder) {
                                 def vpsInfo = vpsInfos[repo.vpsRef]
-                                def changed = false
 
                                 if (!fileExists('.git')) {
                                     // First time clone
@@ -139,6 +149,7 @@ pipeline {
                                         ]
                                     ])
                                     changed = true  
+                                    changedRepos << repo.folder
                                 } else {
                                     def oldCommit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
 
@@ -161,6 +172,8 @@ pipeline {
                                     if (oldCommit != newCommit) {
                                         echo "🔄 Changes detected in ${repo.folder}: ${oldCommit} → ${newCommit}"
                                         changed = true
+                                        changedRepos << repo.folder
+
                                     } else {
                                         echo "⏭️ No changes in ${repo.folder}"
                                         changed = false
@@ -168,38 +181,38 @@ pipeline {
                                     }
                                 }
 
-                                // 👇 write result to a file for later collection
-                                writeFile file: "${repo.folder}.changed", text: changed.toString()
                             }
+                            // 👇 write result to a file for later collection
+                            writeFile file: "${repo.folder}.changed", text: changed.toString()
                         }
                     }
 
                     runWithMaxParallel(parallelTasks, 3)  // 👈 cap parallelism
                     // Merge after parallel by reading files
-                    def changedRepos = []
-                    repos.each { repo ->
-                        dir(repo.folder) {
-                            if (fileExists("${repo.folder}.changed")) {
-                                def val = readFile("${repo.folder}.changed").trim()
-                                echo "📦 Changed file raw: '${val}' (len=${val.length()})"
+                    // def changedRepos = []
+                    // repos.each { repo ->
+                    //     dir(repo.folder) {
+                    //         if (fileExists("${repo.folder}.changed")) {
+                    //             def val = readFile("${repo.folder}.changed").trim()
+                    //             echo "📦 Changed file raw: '${val}' (len=${val.length()})"
 
-                                // Normalize and parse to boolean
-                                def isChanged = val?.toLowerCase() in ["true", "1", "yes"]
-                                if (isChanged) {
-                                    echo "📦 Changed repo ${repo.folder}"
+                    //             // Normalize and parse to boolean
+                    //             def isChanged = val?.toLowerCase() in ["true", "1", "yes"]
+                    //             if (isChanged) {
+                    //                 echo "📦 Changed repo ${repo.folder}"
 
-                                    changedRepos << repo.folder
+                    //                 changedRepos << repo.folder
 
-                                }
-                            }
-                        }
-                    }
+                    //             }
+                    //         }
+                    //     }
+                    // }
 
-                    def joined = changedRepos ? changedRepos.join(',') : ""
-                    env.CHANGED_REPOS = joined as String
-                    echo "📦 Local changedRepos: ${changedRepos}"
-                    echo "📦 Joined string: '${joined}' (len=${joined.length()})"
-                    echo "📦 env.CHANGED_REPOS: '${env.CHANGED_REPOS}'"
+                    // def joined = changedRepos ? changedRepos.join(',') : ""
+                    // env.CHANGED_REPOS = joined as String
+                    // echo "📦 Local changedRepos: ${changedRepos}"
+                    // echo "📦 Joined string: '${joined}' (len=${joined.length()})"
+                    // echo "📦 env.CHANGED_REPOS: '${env.CHANGED_REPOS}'"
 
                 }
             }
@@ -212,7 +225,7 @@ pipeline {
 
                     repos.each { repo ->
                         parallelBuilds["Repo-${repo.folder}"] = {
-                            if (!params.FORCE_BUILD_ALL && !isNewCommit(repo.folder, env.CHANGED_REPOS)) {
+                            if (!params.FORCE_BUILD_ALL && !isNewCommit(repo.folder)) {
                                 echo "⏭️ Skipping build for ${repo.folder}, no changes detected"
                                 return
                             }
@@ -276,7 +289,7 @@ pipeline {
             steps {
                 script {
                     repos.each { repo ->
-                        if (!params.FORCE_BUILD_ALL && !isNewCommit(repo.folder, env.CHANGED_REPOS)) {
+                        if (!params.FORCE_BUILD_ALL && !isNewCommit(repo.folder)) {
                             echo "⏭️ Skipping deploy for ${repo.folder}, no changes detected"
                             return
                         }
@@ -318,7 +331,7 @@ pipeline {
             steps {
                 script {
                     repos.each { repo ->
-                        if (!params.FORCE_BUILD_ALL && !isNewCommit(repo.folder, env.CHANGED_REPOS)) {
+                        if (!params.FORCE_BUILD_ALL && !isNewCommit(repo.folder)) {
                             echo "⏭️ Skipping nginx config for ${repo.folder}, no changes detected"
                             return
                         }
