@@ -3,7 +3,7 @@ pipeline {
 
     
     environment {
-        BACKUP_DIR = "/home/jenkins/certbot_backups"
+        BACKUP_DIR = "certbot_backups"   // just folder name
         DATE_SUFFIX = "${new Date().format('yyyy-MM-dd')}"
     }
 
@@ -34,18 +34,27 @@ pipeline {
                 script {
                     vpsInfos.each { vpsKey, vps ->
                         sshagent(credentials: [vps.vpsCredId]) {
+                            // Create backup on remote VPS (store under user's $HOME)
                             sh """
                                 ssh -o StrictHostKeyChecking=no ${vps.vpsUser}@${vps.vpsHost} '
-                                    mkdir -p ${BACKUP_DIR} &&
-                                    sudo tar -czf ${BACKUP_DIR}/certbot-backup-${DATE_SUFFIX}.tar.gz /etc/letsencrypt
+                                    mkdir -p \$HOME/${BACKUP_DIR} &&
+                                    sudo tar -czf \$HOME/${BACKUP_DIR}/certbot-backup-${DATE_SUFFIX}.tar.gz /etc/letsencrypt
                                 '
                             """
+
+                            // Download backup into Jenkins workspace
+                            sh """
+                                scp -o StrictHostKeyChecking=no ${vps.vpsUser}@${vps.vpsHost}:\$HOME/${BACKUP_DIR}/certbot-backup-${DATE_SUFFIX}.tar.gz \
+                                certbot-backup-${vpsKey}-${DATE_SUFFIX}.tar.gz
+                            """
                         }
-                        echo "✅ Backup completed for VPS: ${vpsKey}"
+
+                        echo "✅ Backup completed and downloaded for VPS: ${vpsKey}"
                     }
                 }
             }
         }
+
 
         // stage('Restore Latest Backup') {
         //     when { expression { return params.RESTORE_VPS != 'none' } }
