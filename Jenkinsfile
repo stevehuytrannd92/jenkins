@@ -199,7 +199,6 @@ pipeline {
 
                     repos.each { repo ->
                         parallelTasks["Pull-${repo.folder}"] = {
-                            def changed = false
                             dir(repo.folder) {
                                 def vpsInfo = vpsInfos[repo.vpsRef]
 
@@ -219,7 +218,7 @@ pipeline {
                                             [$class: 'PruneStaleBranch']
                                         ]
                                     ])
-                                    changed = true  
+
                                     changedRepos << repo.folder
                                 } else {
                                     def oldCommit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
@@ -242,19 +241,18 @@ pipeline {
 
                                     if (oldCommit != newCommit) {
                                         echo "🔄 Changes detected in ${repo.folder}: ${oldCommit} → ${newCommit}"
-                                        changed = true
+
                                         changedRepos << repo.folder
 
                                     } else {
                                         echo "⏭️ No changes in ${repo.folder}"
-                                        changed = false
+
 
                                     }
                                 }
 
                             }
-                            // 👇 write result to a file for later collection
-                            writeFile file: "${repo.folder}.changed", text: changed.toString()
+
                         }
                     }
 
