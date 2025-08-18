@@ -79,8 +79,12 @@ pipeline {
     environment {
         // store missing domains across stages
         MISSING_CERTS = ""
-        CHANGED_REPOS = ""
     }
+
+    triggers {
+        cron('H/15 * * * *')  // runs every 15 minutes
+    }
+
 
     stages {
         stage('Load Script') {
@@ -200,32 +204,9 @@ pipeline {
                     }
 
                     runWithMaxParallel(parallelTasks, params.MAX_PARALLEL.toInteger())  // 👈 cap parallelism
-                    // Merge after parallel by reading files
-                    // def changedRepos = []
-                    // repos.each { repo ->
-                    //     dir(repo.folder) {
-                    //         if (fileExists("${repo.folder}.changed")) {
-                    //             def val = readFile("${repo.folder}.changed").trim()
-                    //             echo "📦 Changed file raw: '${val}' (len=${val.length()})"
 
-                    //             // Normalize and parse to boolean
-                    //             def isChanged = val?.toLowerCase() in ["true", "1", "yes"]
-                    //             if (isChanged) {
-                    //                 echo "📦 Changed repo ${repo.folder}"
-
-                    //                 changedRepos << repo.folder
-
-                    //             }
-                    //         }
-                    //     }
-                    // }
                     echo "Collected repos = ${changedRepos}"
 
-                    // def joined = changedRepos ? changedRepos.join(',') : ""
-                    // env.CHANGED_REPOS = joined as String
-                    // echo "📦 Local changedRepos: ${changedRepos}"
-                    // echo "📦 Joined string: '${joined}' (len=${joined.length()})"
-                    // echo "📦 env.CHANGED_REPOS: '${env.CHANGED_REPOS}'"
 
                 }
             }
