@@ -363,6 +363,8 @@ pipeline {
                                 def nginxConfig = ngnixTemplate
                                     .replace('{{DOMAIN}}', domain)
                                     .replace('{{ENV_NAME}}', envConf.name)
+                                    .replace('{{WEBROOT_BASE}}', vpsInfo.webrootBase)
+
 
                                 writeFile(file: tmpConfigFile, text: nginxConfig)
                                 echo "✅ Generated Nginx config for ${envConf.name} locally: ${tmpConfigFile}"
