@@ -130,13 +130,14 @@ return [
         def domain = env.MAIN_DOMAIN
             .replaceAll(/^https?:\/\//, '')   // remove protocol
             .replaceAll(/\/$/, '')            // remove trailing slash
-            .replaceAll(/\./, '_')            // replace dot with underscore
+            .replaceAll(/[^a-zA-Z0-9]/, '_')  // replace special chars with underscore
+            .replaceAll(/_+/, '_')            // collapse consecutive underscores
+            .toLowerCase()                    // optional: normalize case
 
         env.name = domain
         return env
     }
     return repo
 }
-
 
 
