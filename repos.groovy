@@ -97,7 +97,7 @@ return [
         envs: [
             [ 
                 name: 'thebtcbull', 
-                MAIN_DOMAIN:'thebtcbull.com',
+                MAIN_DOMAIN:'https://thebtcbull.com/',
                 BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks3.json',
                 LOGO_PATH:'/img/btcbull/logo.png',
                 MAIN_GTAG:'G-GR6Q9PM18Q',
@@ -107,7 +107,17 @@ return [
             ],
             [ 
                 name: 'btcbullcoin_io', 
-                MAIN_DOMAIN:'btcbullcoin.io',
+                MAIN_DOMAIN:'https://btcbullcoin.io/',
+                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks3.json',
+                LOGO_PATH:'/img/btcbull/logo.png',
+                MAIN_GTAG:'G-GR6Q9PM18Q',
+                MAIN_SITENAME:'btcbull',
+                MAIN_TWITTER:'@btcbull',
+                OG_PATH:'img/btcbull/OG.jpeg'
+            ],
+            [
+                name: 'btcbullcoin_io', 
+                MAIN_DOMAIN:'https://btcxbull.com/',
                 BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks3.json',
                 LOGO_PATH:'/img/btcbull/logo.png',
                 MAIN_GTAG:'G-GR6Q9PM18Q',
