@@ -90,15 +90,16 @@ def generateNginxConfigs() {
                     sh """
                         scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${vpsInfo.vpsUser}@${vpsInfo.vpsHost}:/home/${vpsInfo.vpsUser}/${tmpConfigFile}
                         ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "
-                            sudo mv /home/${vpsInfo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
-                            sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile} &&
-
                             # 👉 unlink any existing sites with the same domain
                             for f in /etc/nginx/sites-enabled/*; do
                                 if grep -q \\"server_name ${domain};\\" \$f; then
                                     sudo rm -f \$f
                                 fi
                             done
+                            
+                            sudo mv /home/${vpsInfo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
+                            sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile} &&
+
                             
                             # 👉 activate only this site
                             sudo ln -sf /etc/nginx/sites-available/${tmpConfigFile} /etc/nginx/sites-enabled/${tmpConfigFile} 
