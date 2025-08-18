@@ -19,9 +19,12 @@ def isNewCommit(String repo, String newChangesRepo) {
     if (!newChangesRepo?.trim()) {
         return false
     }
-    def repoList = newChangesRepo.split(',').collect { it.trim() }
-    return repoList.contains(repo)
+    def repoList = newChangesRepo.split(',')
+        .collect { it.trim().toLowerCase() }
+        .findAll { it }  // drop empty strings
+    return repoList.contains(repo.toLowerCase())
 }
+
 
 // Run a map of tasks with maxParallel at once
 def runWithMaxParallel(tasks, maxParallel = 3) {
@@ -192,7 +195,7 @@ pipeline {
                         }
                     }
 
-                    env.CHANGED_REPOS = changedRepos.join(',')
+                    env.CHANGED_REPOS = "${changedRepos.join(',')}"
                     echo "📦 Changed repos: ${changedRepos.join(',')}"
                     echo "📦 Changed repos: ${env.CHANGED_REPOS}"
                 }
