@@ -2,6 +2,7 @@ import groovy.transform.Field
 
 
 @Field def changedRepos = []
+@Field def missingCerts = []
 
 
 // --- Helper functions ---
@@ -13,12 +14,13 @@ def extractDomain(String url) {
 }
 
 // Check if domain exists in MISSING_CERTS string
-def isMissingCert(String domain, String missingCertsStr) {
-    if (!missingCertsStr?.trim()) {
+def isMissingCert(String domain) {
+    if (!missingCerts || missingCerts.isEmpty()) {
         return false
     }
-    def domains = missingCertsStr.split(',').collect { it.trim() }
-    return domains.contains(domain)
+    def domainList = missingCerts.collect { it?.trim()?.toLowerCase() }
+                             .findAll { it } // filter out null/empty
+    return domainList.contains(domain.toLowerCase())
 }
 // Check if new comit
 // def isNewCommit(String repo, String newChangesRepo) {
@@ -83,11 +85,6 @@ pipeline {
     }
 
 
-    environment {
-        // store missing domains across stages
-        MISSING_CERTS = ""
-    }
-
     triggers {
         cron('0,15,30,45 * * * *')
     }
@@ -107,7 +104,6 @@ pipeline {
         stage('Check Certificates') {
             steps {
                 script {
-                    def missing = []
 
                     repos.each { repo ->
                         def vpsInfo = vpsInfos[repo.vpsRef]
@@ -125,7 +121,7 @@ pipeline {
 
                                 if (exists == "no") {
                                     echo "⚠️  Certificate missing for ${domain}"
-                                    missing << domain
+                                    missingCerts << domain
                                 } else {
                                     echo "✅ Certificate exists for ${domain}"
                                 }
@@ -133,9 +129,8 @@ pipeline {
                         }
                     }
 
-                    if (missing) {
-                        echo "⚠️  Some certificates are missing: ${missing.join(', ')}"
-                        env.MISSING_CERTS = missing.join(',')
+                    if (missingCerts) {
+                        echo "⚠️  Some certificates are missing: ${missingCerts}"
                     } else {
                         echo "✅ All certificates present"
                     }
@@ -235,8 +230,9 @@ pipeline {
                             dir(repo.folder) {
                                 repo.envs.each { envConf, idx ->
                                     def domain = extractDomain(envConf.MAIN_DOMAIN)
+                                    echo "⚠️  Some certificates are missing: ${missing.join(', ')}"
 
-                                    if (isMissingCert(domain, env.MISSING_CERTS)) {
+                                    if (isMissingCert(domain)) {
                                         echo "⏭️ Skipping build for ${envConf.name} (${domain}) due to missing cert"
                                         return
                                     }
@@ -317,7 +313,7 @@ pipeline {
                             repo.envs.each { envConf ->
                                 def domain = extractDomain(envConf.MAIN_DOMAIN)
 
-                                if (isMissingCert(domain, env.MISSING_CERTS)) {
+                                if (isMissingCert(domain)) {
                                     echo "⏭️ Skipping deploy for ${envConf.name} (${domain}) due to missing cert"
                                     return
                                 }
@@ -359,7 +355,7 @@ pipeline {
                             repo.envs.each { envConf ->
                                 def domain = extractDomain(envConf.MAIN_DOMAIN)
 
-                                if (isMissingCert(domain, env.MISSING_CERTS)) {
+                                if (isMissingCert(domain)) {
                                     echo "⏭️ Skipping nginx config for ${envConf.name} (${domain}) due to missing cert"
                                     return
                                 }
