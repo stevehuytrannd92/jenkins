@@ -92,11 +92,12 @@ def generateNginxConfigs() {
                         ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "
                             # 👉 unlink any existing sites with the same domain
                             for f in /etc/nginx/sites-enabled/*; do
-                                if grep -q \\"server_name ${domain};\\" \$f; then
-                                    sudo rm -f \$f
+                                if grep -qE "server_name .*(${domain}).*;" "$f"; then
+                                    echo "Removing conflicting site: $f"
+                                    sudo rm -f "$f"
                                 fi
                             done
-                            
+
                             sudo mv /home/${vpsInfo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
                             sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile} &&
 
