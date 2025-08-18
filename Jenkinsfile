@@ -178,6 +178,7 @@ pipeline {
                         dir(repo.folder) {
                             if (fileExists("${repo.folder}.changed")) {
                                 def val = readFile("${repo.folder}.changed").trim()
+                                echo "📦 Changed file: ${val}"
                                 if (val == "true") {
                                     changedRepos << repo.folder
                                 }
@@ -186,6 +187,7 @@ pipeline {
                     }
 
                     env.CHANGED_REPOS = changedRepos.join(',')
+                    echo "📦 Changed repos: ${changedRepos.join(',')}"
                     echo "📦 Changed repos: ${env.CHANGED_REPOS}"
                 }
             }
