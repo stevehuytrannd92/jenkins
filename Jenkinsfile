@@ -381,16 +381,28 @@ pipeline {
                                             sudo nginx -t -c /etc/nginx/sites-available/${tmpConfigFile} &&
 
                                             # 👉 activate only this site
-                                            sudo ln -sf /etc/nginx/sites-available/${tmpConfigFile} /etc/nginx/sites-enabled/${tmpConfigFile} &&
+                                            sudo ln -sf /etc/nginx/sites-available/${tmpConfigFile} /etc/nginx/sites-enabled/${tmpConfigFile} 
 
-                                            # 👉 reload nginx once (affects all, but only after this site passed syntax check)
-                                            sudo systemctl reload nginx
                                         "
                                         ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "cat /etc/nginx/sites-available/${tmpConfigFile}"
                                     """
                                 }
 
                             }
+                        }
+                    }
+
+                    vpsInfos.each{ vpsInfo -> 
+                        sshagent(credentials: [vpsInfo.vpsCredId]) {
+                            sh """
+                                scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${vpsInfo.vpsUser}@${vpsInfo.vpsHost}:/home/${vpsInfo.vpsUser}/${tmpConfigFile}
+                                ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "
+
+                                    sudo nginx -t &&
+
+                                    sudo systemctl reload nginx
+                                "
+                            """
                         }
                     }
                 }
