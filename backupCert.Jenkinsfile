@@ -37,14 +37,14 @@ pipeline {
                             // Create backup on remote VPS (store under user's $HOME)
                             sh """
                                 ssh -o StrictHostKeyChecking=no ${vps.vpsUser}@${vps.vpsHost} '
-                                    mkdir -p \$HOME/${BACKUP_DIR} &&
-                                    sudo tar -czf \$HOME/${BACKUP_DIR}/certbot-backup-${DATE_SUFFIX}.tar.gz /etc/letsencrypt
+                                    mkdir -p /home/${vps.vpsUser}/${BACKUP_DIR} &&
+                                    sudo tar -czf /home/${vps.vpsUser}/${BACKUP_DIR}/certbot-backup-${DATE_SUFFIX}.tar.gz /etc/letsencrypt
                                 '
                             """
 
                             // Download backup into Jenkins workspace
                             sh """
-                                scp -o StrictHostKeyChecking=no ${vps.vpsUser}@${vps.vpsHost}:\$HOME/${BACKUP_DIR}/certbot-backup-${DATE_SUFFIX}.tar.gz \
+                                scp -o StrictHostKeyChecking=no ${vps.vpsUser}@${vps.vpsHost}:/home/${vps.vpsUser}/${BACKUP_DIR}/certbot-backup-${DATE_SUFFIX}.tar.gz \
                                 certbot-backup-${vpsKey}-${DATE_SUFFIX}.tar.gz
                             """
                         }
