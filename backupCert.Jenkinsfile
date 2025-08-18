@@ -1,10 +1,7 @@
 pipeline {
     agent any
 
-    parameters {
-        // choice(name: 'RESTORE_VPS', choices: ['none'] + vpsInfos.keySet().toList(), description: 'Select VPS to restore latest backup (none = skip)')
-    }
-
+    
     environment {
         BACKUP_DIR = "/home/jenkins/certbot_backups"
         DATE_SUFFIX = "${new Date().format('yyyy-MM-dd')}"
