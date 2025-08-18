@@ -10,7 +10,6 @@ return [
 
         envs: [
             [ 
-                name: 'btcswifts', 
                 MAIN_DOMAIN:'https://btcswifts.com/',
                 BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
                 LOGO_PATH:'/img/btcswift/bitcoin-swift-logo-main.webp',
@@ -31,7 +30,6 @@ return [
         vpsRef : 'vps1',   // 👈 just reference which VPS to use
         envs: [
             [ 
-                name: 'wepetoken', 
                 MAIN_DOMAIN:'https://wepetoken.com/',
                 BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
                 LOGO_PATH:'/img/wepe/token.svg',
@@ -53,7 +51,6 @@ return [
 
         envs: [
             [ 
-                name: 'token6969', 
                 MAIN_DOMAIN:'https://token6969.com/',
                 BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
                 LOGO_PATH:'/img/token6900/favicon.png',
@@ -74,7 +71,6 @@ return [
         vpsRef : 'vps1',   // 👈 just reference which VPS to use
         envs: [
             [ 
-                name: 'btchyper', 
                 MAIN_DOMAIN:'https://btchyper.io/',
                 BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
                 LOGO_PATH:'/img/btchyper/token.svg',
@@ -96,7 +92,6 @@ return [
         vpsRef : 'vps1',   // 👈 just reference which VPS to use
         envs: [
             [ 
-                name: 'thebtcbull', 
                 MAIN_DOMAIN:'https://thebtcbull.com/',
                 BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks3.json',
                 LOGO_PATH:'/img/btcbull/logo.png',
@@ -106,7 +101,6 @@ return [
                 OG_PATH:'img/btcbull/OG.jpeg'
             ],
             [ 
-                name: 'btcbullcoin_io', 
                 MAIN_DOMAIN:'https://btcbullcoin.io/',
                 BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks3.json',
                 LOGO_PATH:'/img/btcbull/logo.png',
@@ -116,7 +110,6 @@ return [
                 OG_PATH:'img/btcbull/OG.jpeg'
             ],
             [
-                name: 'btcxbull', 
                 MAIN_DOMAIN:'https://btcxbull.com/',
                 BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks3.json',
                 LOGO_PATH:'/img/btcbull/logo.png',
@@ -132,6 +125,18 @@ return [
     
 
 ]
+.collect { repo ->
+    repo.envs = repo.envs.collect { env ->
+        def domain = env.MAIN_DOMAIN
+            .replaceAll(/^https?:\/\//, '')   // remove protocol
+            .replaceAll(/\/$/, '')            // remove trailing slash
+            .replaceAll(/\./, '_')            // replace dot with underscore
+
+        env.name = domain
+        return env
+    }
+    return repo
+}
 
 
 
