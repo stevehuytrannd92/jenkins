@@ -32,11 +32,14 @@ def isMissingCert(String domain, String missingCertsStr) {
 // }
 
 
+
 def isNewCommit(String repo) {
     if (!changedRepos || changedRepos.isEmpty()) {
         return false
     }
-    return changedRepos*.toLowerCase().contains(repo.toLowerCase())
+    def repoList = changedRepos.collect { it?.trim()?.toLowerCase() }
+                             .findAll { it } // filter out null/empty
+    return repoList.contains(repo.toLowerCase())
 }
 
 // Run a map of tasks with maxParallel at once
