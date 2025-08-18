@@ -111,7 +111,8 @@ pipeline {
             steps {
                 script {
                     def parallelTasks = [:]
-                    def changedRepos = []
+                    def results = [:]
+
 
                     repos.each { repo ->
                         parallelTasks["Pull-${repo.folder}"] = {
@@ -134,7 +135,7 @@ pipeline {
                                             [$class: 'PruneStaleBranch']
                                         ]
                                     ])
-                                    changedRepos << repo.folder
+                                    results[repo.folder] = true
                                 } else {
                                     def oldCommit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
 
@@ -156,9 +157,11 @@ pipeline {
 
                                     if (oldCommit != newCommit) {
                                         echo "🔄 Changes detected in ${repo.folder}: ${oldCommit} → ${newCommit}"
-                                        changedRepos << repo.folder
+                                        results[repo.folder] = true
                                     } else {
                                         echo "⏭️ No changes in ${repo.folder}"
+                                        results[repo.folder] = false
+
                                     }
                                 }
                             }
@@ -166,6 +169,8 @@ pipeline {
                     }
 
                     runWithMaxParallel(parallelTasks, 3)  // 👈 cap parallelism
+                    // Merge after parallel
+                    def changedRepos = results.findAll { k, v -> v }.keySet() as List
                     env.CHANGED_REPOS = changedRepos.join(',')
                     echo "📦 Changed repos: ${env.CHANGED_REPOS}"
                 }
