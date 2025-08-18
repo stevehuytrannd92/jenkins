@@ -116,7 +116,7 @@ return [
                 OG_PATH:'img/btcbull/OG.jpeg'
             ],
             [
-                name: 'btcbullcoin_io', 
+                name: 'btcxbull', 
                 MAIN_DOMAIN:'https://btcxbull.com/',
                 BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks3.json',
                 LOGO_PATH:'/img/btcbull/logo.png',
