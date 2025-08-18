@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     parameters {
-        choice(name: 'RESTORE_VPS', choices: ['none'] + vpsInfos.keySet().toList(), description: 'Select VPS to restore latest backup (none = skip)')
+        // choice(name: 'RESTORE_VPS', choices: ['none'] + vpsInfos.keySet().toList(), description: 'Select VPS to restore latest backup (none = skip)')
     }
 
     environment {
@@ -33,7 +33,6 @@ pipeline {
         }
 
         stage('Backup Certbot on all VPS') {
-            when { expression { return params.RESTORE_VPS == 'none' } }
             steps {
                 script {
                     vpsInfos.each { vpsKey, vps ->
