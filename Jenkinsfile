@@ -166,9 +166,6 @@ def generateNginxConfigs() {
 
                             # 👉 Enable only this site
                             sudo ln -sf /etc/nginx/sites-available/\$CONFIG_FILE /etc/nginx/sites-enabled/\$CONFIG_FILE
-
-                            # 👉 Test and reload Nginx
-                            sudo nginx -t && sudo systemctl reload nginx
                         "
 
                         # Optional: view deployed config
