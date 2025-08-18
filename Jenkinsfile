@@ -68,6 +68,12 @@ pipeline {
             defaultValue: false,
             description: 'Force build & deploy all repos, even if no new changes'
         )
+        string(
+            name: 'MAX_PARALLEL',
+            defaultValue: '3',
+            description: 'Maximum number of tasks to run in parallel'
+        )
+
     }
 
     environment {
@@ -193,7 +199,7 @@ pipeline {
                         }
                     }
 
-                    runWithMaxParallel(parallelTasks, 3)  // 👈 cap parallelism
+                    runWithMaxParallel(parallelTasks, params.MAX_PARALLEL.toInteger())  // 👈 cap parallelism
                     // Merge after parallel by reading files
                     // def changedRepos = []
                     // repos.each { repo ->
@@ -287,7 +293,7 @@ pipeline {
                         }
                     }
 
-                    runWithMaxParallel(parallelBuilds, 3)  // 👈 cap parallelism
+                    runWithMaxParallel(parallelBuilds, params.MAX_PARALLEL.toInteger())  // 👈 cap parallelism
                 }
             }
         }
