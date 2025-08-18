@@ -197,7 +197,7 @@ pipeline {
 
     options {
         disableConcurrentBuilds()   // 🚫 no concurrent runs
-        // buildDiscarder(logRotator(numToKeepStr: '10')) // optional cleanup
+        buildDiscarder(logRotator(numToKeepStr: '100')) // optional cleanup
         // timeout(time: 60, unit: 'MINUTES')            // optional safety
     }
 
