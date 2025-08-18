@@ -520,6 +520,11 @@ pipeline {
                 script {
                     generateNginxConfigs()
 
+                    if (!params.FORCE_BUILD_ALL && !isNewCommit(repo.folder)) {
+                        echo "⏭️ Skipping nginx config for ${repo.folder}, no changes detected"
+                        return
+                    }
+
                     vpsInfos.values().each { vpsConf -> 
                         sshagent(credentials: [vpsConf.vpsCredId]) {
                             sh """
