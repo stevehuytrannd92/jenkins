@@ -134,8 +134,8 @@ return [
     
     [
         url: 'git@github.com:stevehuytrannd92/flockerz.git',
-        branch: 'btcbull',
-        folder: 'btcbull',
+        branch: 'btcbull-btcbullcoin',
+        folder: 'btcbullcoin',
         credId: 'id_ed25519_stevehuytrannd92',
         vpsCredId: 'vps1',
         vpsUser: 'ubuntu',
@@ -147,7 +147,7 @@ return [
             [ 
                 name: 'thebtcbull', 
                 MAIN_DOMAIN:'thebtcbull.com',
-                BACKLINKS_URL:'https://flockez.netlify.app/js/btcbullbacklinks.json',
+                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks3.json',
                 LOGO_PATH:'/img/btcbull/logo.png',
                 MAIN_GTAG:'G-GR6Q9PM18Q',
                 MAIN_SITENAME:'btcbull',
@@ -157,7 +157,7 @@ return [
             [ 
                 name: 'btcbullcoin_io', 
                 MAIN_DOMAIN:'btcbullcoin.io',
-                BACKLINKS_URL:'https://flockez.netlify.app/js/btcbullbacklinks.json',
+                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks3.json',
                 LOGO_PATH:'/img/btcbull/logo.png',
                 MAIN_GTAG:'G-GR6Q9PM18Q',
                 MAIN_SITENAME:'btcbull',
