@@ -214,66 +214,8 @@ pipeline {
             }
         }
 
-        stage('Check Certificates') {
-            steps {
-                script {
 
-                    repos.each { repo ->
-                        def vpsInfo = vpsInfos[repo.vpsRef]
-                        repo.envs.each { site ->
-                            def domain = extractDomain(site.MAIN_DOMAIN)
-
-                            sshagent (credentials: [vpsInfo.vpsCredId]) {
-                                def exists = sh(
-                                    script: """
-                                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} \
-                                        "sudo test -f /etc/letsencrypt/live/${domain}/fullchain.pem && echo yes || echo no"
-                                    """,
-                                    returnStdout: true
-                                ).trim()
-
-                                if (exists == "no") {
-                                    echo "⚠️  Certificate missing for ${domain}"
-                                    missingCerts << domain
-                                } else {
-                                    echo "✅ Certificate exists for ${domain}"
-                                }
-                            }
-                        }
-                    }
-
-                    if (missingCerts) {
-                        echo "⚠️  Some certificates are missing: ${missingCerts}"
-                    } else {
-                        echo "✅ All certificates present"
-                    }
-                }
-            }
-        }
-
-        // stage('Debug Generate NGNIX config and deploy SSH') {
-        //     steps {
-        //         script {
-        //             generateNginxConfigs()
-
-        //             vpsInfos.values().each { vpsConf -> 
-        //                 sshagent(credentials: [vpsConf.vpsCredId]) {
-        //                     sh """
-        //                         ssh -o StrictHostKeyChecking=no ${vpsConf.vpsUser}@${vpsConf.vpsHost} "
-
-        //                             sudo nginx -t &&
-
-        //                             sudo systemctl reload nginx
-        //                         "
-        //                     """
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
-
-
-        stage('Repos Pulls') {
+  stage('Repos Pulls') {
             steps {
                 script {
                     def parallelTasks = [:]
@@ -341,11 +283,56 @@ pipeline {
                     runWithMaxParallel(parallelTasks, params.MAX_PARALLEL.toInteger())  // 👈 cap parallelism
 
                     echo "Collected repos = ${changedRepos}"
-
-
+                    if (!params.FORCE_BUILD_ALL && changedRepos.isEmpty()) {
+                        echo "⏭️ No changes and FORCE_BUILD_ALL not set, stopping pipeline."
+                        currentBuild.result = 'SUCCESS'
+                        error("No changes, end pipeline early")
+                    }
                 }
             }
         }
+
+
+        stage('Check Certificates') {
+            when { expression { return params.FORCE_BUILD_ALL || !changedRepos.isEmpty() } }
+
+            steps {
+                script {
+                    def reposToCheck = params.FORCE_BUILD_ALL ? repos : repos.findAll { r -> changedRepos.contains(r.folder) }
+
+                    reposToCheck.each { repo ->
+                        def vpsInfo = vpsInfos[repo.vpsRef]
+                        repo.envs.each { site ->
+                            def domain = extractDomain(site.MAIN_DOMAIN)
+
+                            sshagent (credentials: [vpsInfo.vpsCredId]) {
+                                def exists = sh(
+                                    script: """
+                                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} \
+                                        "sudo test -f /etc/letsencrypt/live/${domain}/fullchain.pem && echo yes || echo no"
+                                    """,
+                                    returnStdout: true
+                                ).trim()
+
+                                if (exists == "no") {
+                                    echo "⚠️  Certificate missing for ${domain}"
+                                    missingCerts << domain
+                                } else {
+                                    echo "✅ Certificate exists for ${domain}"
+                                }
+                            }
+                        }
+                    }
+
+                    if (missingCerts) {
+                        echo "⚠️  Some certificates are missing: ${missingCerts}"
+                    } else {
+                        echo "✅ All certificates present"
+                    }
+                }
+            }
+        }
+
 
         stage('Build Projects') {
             steps {
