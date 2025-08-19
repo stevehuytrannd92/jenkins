@@ -79,3 +79,10 @@ ls -l /etc/nginx/sites-enabled/
 sudo rm -r /etc/nginx/sites-enabled/sites-available
 sudo nginx -t
 sudo systemctl reload nginx
+
+
+# dig installation
+docker exec -it -u root jenkins-sandbox bash
+
+apt-get update && apt-get install -y dnsutils
+
