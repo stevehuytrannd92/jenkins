@@ -284,9 +284,8 @@ pipeline {
 
                     echo "Collected repos = ${changedRepos}"
                     if (!params.FORCE_BUILD_ALL && changedRepos.isEmpty()) {
-                        echo "⏭️ No changes and FORCE_BUILD_ALL not set, stopping pipeline."
-                        currentBuild.result = 'SUCCESS'
-                        error("No changes, end pipeline early")
+                        echo "⏭️ No changes and FORCE_BUILD_ALL not set, stopping pipeline early."
+                        return  // exits this stage, and since no later stages run → SUCCESS
                     }
                 }
             }
