@@ -60,6 +60,24 @@ pipeline {
                                 } else {
                                     echo "❌ No certificate for ${domain}, issuing new one"
 
+                                    // 🌐 Resolve domain to IP
+                                    def domainIp = sh(
+                                        script: "dig +short ${domain} | tail -n1",
+                                        returnStdout: true
+                                    ).trim()
+
+                                    if (!domainIp) {
+                                        echo "⚠️ Cannot resolve domain ${domain}, skipping cert issuance."
+                                        return
+                                    }
+
+                                    echo "🔍 Domain ${domain} resolves to ${domainIp}, VPS expected IP is ${vpsInfo.vpsHost}"
+
+                                    if (domainIp != vpsInfo.vpsHost) {
+                                        echo "❌ Domain ${domain} does not point to expected VPS ${vpsInfo.vpsHost}, skipping cert issuance."
+                                        return
+                                    }
+
                                     def tmpConfigFile = "${site.name}.conf"
 
                                     // Replace placeholders in nginx template
