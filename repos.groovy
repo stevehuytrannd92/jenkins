@@ -3,12 +3,12 @@ def loadRepos(String name) {
 }
 
 def repos = []
-repos += loadRepos("maxidoge")
-repos += loadRepos("btcswift")
-repos += loadRepos("wepe")
-repos += loadRepos("token6900")
-repos += loadRepos("btchyper")
-repos += loadRepos("btcbullcoin")
+repos += load "${env.WORKSPACE}/jenkins/gitRepos/maxidoge.groovy"
+repos += load "${env.WORKSPACE}/jenkins/gitRepos/btcswift.groovy"
+repos += load "${env.WORKSPACE}/jenkins/gitRepos/wepe.groovy"
+repos += load "${env.WORKSPACE}/jenkins/gitRepos/token6900.groovy"
+repos += load "${env.WORKSPACE}/jenkins/gitRepos/btchyper.groovy"
+repos += load "${env.WORKSPACE}/jenkins/gitRepos/btcbullcoin.groovy"
 
 
 return repos.collect { repo ->
