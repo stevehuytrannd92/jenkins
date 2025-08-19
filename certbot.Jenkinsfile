@@ -60,9 +60,11 @@ pipeline {
                                 } else {
                                     echo "❌ No certificate for ${domain}, issuing new one"
 
-                                    def domainIp = java.net.InetAddress.getByName(domain).getHostAddress()
-                                    // echo "Resolved ${host} -> ${ip}"
-
+                                    // 🌐 Resolve domain to IP
+                                    def domainIp = sh(
+                                        script: "dig +short ${domain} | tail -n1",
+                                        returnStdout: true
+                                    ).trim()
 
                                     if (!domainIp) {
                                         echo "⚠️ Cannot resolve domain ${domain}, skipping cert issuance."
