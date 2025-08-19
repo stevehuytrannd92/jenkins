@@ -60,16 +60,16 @@ pipeline {
                                 } else {
                                     echo "❌ No certificate for ${domain}, issuing new one"
 
-                                    // 🌐 Resolve domain to IP
-                                    def domainIp = sh(
-                                        script: "dig +short ${domain} | tail -n1",
-                                        returnStdout: true
-                                    ).trim()
+                                    def domainIp = java.net.InetAddress.getByName(domain).getHostAddress()
+                                    // echo "Resolved ${host} -> ${ip}"
+
 
                                     if (!domainIp) {
                                         echo "⚠️ Cannot resolve domain ${domain}, skipping cert issuance."
                                         return
                                     }
+
+                                    
 
                                     echo "🔍 Domain ${domain} resolves to ${domainIp}, VPS expected IP is ${vpsInfo.vpsHost}"
 
