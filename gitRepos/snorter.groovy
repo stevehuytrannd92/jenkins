@@ -15,7 +15,7 @@ return [
                 MAIN_GTAG:'G-6FC2N1KBNH',
                 MAIN_SITENAME:'snorter',
                 MAIN_TWITTER:'@snorter',
-                OG_PATH:'/img/snorter/OG.jpeg'
+                OG_PATH:'/img/snorter/OG.jpg'
             ],
         ]
 
