@@ -22,18 +22,6 @@ def isMissingCert(String domain) {
                              .findAll { it } // filter out null/empty
     return domainList.contains(domain.toLowerCase())
 }
-// Check if new comit
-// def isNewCommit(String repo, String newChangesRepo) {
-//     if (!newChangesRepo?.trim()) {
-//         return false
-//     }
-//     def repoList = newChangesRepo.split(',')
-//         .collect { it.trim().toLowerCase() }
-//         .findAll { it }  // drop empty strings
-//     return repoList.contains(repo.toLowerCase())
-// }
-
-
 
 def isNewCommit(String repo) {
     if (!changedRepos || changedRepos.isEmpty()) {
