@@ -38,6 +38,11 @@ pipeline {
                                 .replaceAll('/','')
                                 .replaceAll('^www\\.', '') // normalize
 
+                                if (!expectedDomainsPerVps.containsKey(repo.vpsRef)) {
+                                    expectedDomainsPerVps[repo.vpsRef] = []
+                                }
+
+
                             expectedDomainsPerVps[repo.vpsRef] << domain
                             echo "📌 Collected domain for VPS ${repo.vpsRef}: ${domain} + www.${domain}"
                         }
