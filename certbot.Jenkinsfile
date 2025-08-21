@@ -27,7 +27,7 @@ pipeline {
             steps {
                 script {
                     // Build expected domains per VPS
-                    def expectedDomainsPerVps = [:].withDefault { [] }
+                    def expectedDomainsPerVps = [:].withDefault { [] as ArrayList }
 
                     repos.each { repo ->
                         def vpsInfo = vpsInfos[repo.vpsRef]
@@ -39,8 +39,14 @@ pipeline {
                                 .replaceAll('^www\\.', '') // normalize
 
                             expectedDomainsPerVps[repo.vpsRef] << domain
-                            // expectedDomainsPerVps[repo.vpsRef] << "www.${domain}" // also keep www
+                            expectedDomainsPerVps[repo.vpsRef] << "www.${domain}"
+                            echo "📌 Collected domain for VPS ${repo.vpsRef}: ${domain} + www.${domain}"
                         }
+                    }
+
+                    // After collection, dump the whole map
+                    expectedDomainsPerVps.each { vpsKey, domains ->
+                        echo "✅ VPS ${vpsKey} should have certs for: ${domains}"
                     }
 
                     // Loop VPSes and clean up
