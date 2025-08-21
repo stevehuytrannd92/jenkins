@@ -23,6 +23,58 @@ pipeline {
             }
         }
 
+        stage('Cleanup Redundant Certificates') {
+            steps {
+                script {
+                    // Build expected domains per VPS
+                    def expectedDomainsPerVps = [:].withDefault { [] }
+
+                    repos.each { repo ->
+                        def vpsInfo = vpsInfos[repo.vpsRef]
+                        repo.envs.each { site ->
+                            def domain = site.MAIN_DOMAIN
+                                .replaceAll('https://','')
+                                .replaceAll('http://','')
+                                .replaceAll('/','')
+                                .replaceAll('^www\\.', '') // normalize
+
+                            expectedDomainsPerVps[repo.vpsRef] << domain
+                            // expectedDomainsPerVps[repo.vpsRef] << "www.${domain}" // also keep www
+                        }
+                    }
+
+                    // Loop VPSes and clean up
+                    expectedDomainsPerVps.each { vpsKey, domains ->
+                        def vpsInfo = vpsInfos[vpsKey]
+
+                        sshagent (credentials: [vpsInfo.vpsCredId]) {
+                            // list all certs in /etc/letsencrypt/live
+                            def existingCerts = sh(
+                                script: """
+                                    ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} \
+                                    "ls -1 /etc/letsencrypt/live || true"
+                                """,
+                                returnStdout: true
+                            ).trim().split("\\r?\\n") as List
+
+                            echo "📜 VPS ${vpsInfo.vpsHost} has certs: ${existingCerts}"
+                            echo "✅ Expected for repos: ${domains}"
+
+                            def redundant = existingCerts.findAll { !domains.contains(it) }
+                            if (redundant) {
+                                echo "🗑️ Removing redundant certs on ${vpsInfo.vpsHost}: ${redundant}"
+
+                            } else {
+                                echo "✨ No redundant certs to remove on ${vpsInfo.vpsHost}"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+
         stage('Handle Certificates') {
             steps {
                 script {

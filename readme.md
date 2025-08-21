@@ -86,3 +86,12 @@ docker exec -it -u root jenkins-sandbox bash
 
 apt-get update && apt-get install -y dnsutils
 
+
+
+redundant.each { cert ->
+    sh """
+        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "
+            sudo rm -rf /etc/letsencrypt/live/${cert} /etc/letsencrypt/archive/${cert} /etc/letsencrypt/renewal/${cert}.conf || true
+        "
+    """
+}
