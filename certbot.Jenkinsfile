@@ -27,7 +27,7 @@ pipeline {
             steps {
                 script {
                     // Build expected domains per VPS
-                    def expectedDomainsPerVps = [:].withDefault { [] as ArrayList }
+                    def expectedDomainsPerVps = [:]
 
                     repos.each { repo ->
                         def vpsInfo = vpsInfos[repo.vpsRef]
@@ -39,7 +39,6 @@ pipeline {
                                 .replaceAll('^www\\.', '') // normalize
 
                             expectedDomainsPerVps[repo.vpsRef] << domain
-                            expectedDomainsPerVps[repo.vpsRef] << "www.${domain}"
                             echo "📌 Collected domain for VPS ${repo.vpsRef}: ${domain} + www.${domain}"
                         }
                     }
