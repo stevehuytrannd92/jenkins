@@ -52,7 +52,7 @@ pipeline {
                             def existingCerts = sh(
                                 script: """
                                     ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} \
-                                    "sudo ls -1 /etc/letsencrypt/live || true"
+                                    "sudo ls -1 /etc/letsencrypt/live"
                                 """,
                                 returnStdout: true
                             ).trim().split("\\r?\\n") as List
