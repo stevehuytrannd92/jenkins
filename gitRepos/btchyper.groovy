@@ -8,7 +8,7 @@ return [
         vpsRef : 'vps1',   // 👈 just reference which VPS to use
         envs: [
             [ 
-                MAIN_DOMAIN:'https://btchyper.io/',
+                MAIN_DOMAIN:'https://btchypernew.com/',
                 BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
                 LOGO_PATH:'/img/btchyper/token.svg',
                 MAIN_GTAG:'G-RKFMME3BTM',
