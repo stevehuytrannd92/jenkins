@@ -4,9 +4,6 @@ def loadRepos(String name) {
 
 def repos = []
 repos += load "${env.WORKSPACE}/gitRepos/maxidoge.groovy"
-repos += load "${env.WORKSPACE}/gitRepos/btcswift.groovy"
-repos += load "${env.WORKSPACE}/gitRepos/wepe.groovy"
-repos += load "${env.WORKSPACE}/gitRepos/token6900.groovy"
 repos += load "${env.WORKSPACE}/gitRepos/btchyper.groovy"
 repos += load "${env.WORKSPACE}/gitRepos/btcbullcoin.groovy"
 repos += load "${env.WORKSPACE}/gitRepos/snorter.groovy"
