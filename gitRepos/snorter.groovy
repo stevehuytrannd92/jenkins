@@ -8,15 +8,15 @@ return [
         vpsRef : 'vps1',   // 👈 just reference which VPS to use
 
         envs: [
-            [ 
-                MAIN_DOMAIN:'https://snorter.io/',
-                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
-                LOGO_PATH:'/img/snorter/logo.png',
-                MAIN_GTAG:'G-6FC2N1KBNH',
-                MAIN_SITENAME:'snorter',
-                MAIN_TWITTER:'@snorter',
-                OG_PATH:'/img/snorter/OG.jpg'
-            ],
+            // [ 
+            //     MAIN_DOMAIN:'https://snorter.io/',
+            //     BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
+            //     LOGO_PATH:'/img/snorter/logo.png',
+            //     MAIN_GTAG:'G-6FC2N1KBNH',
+            //     MAIN_SITENAME:'snorter',
+            //     MAIN_TWITTER:'@snorter',
+            //     OG_PATH:'/img/snorter/OG.jpg'
+            // ],
             [ 
                 MAIN_DOMAIN:'https://snortercoin.com/',
                 BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
