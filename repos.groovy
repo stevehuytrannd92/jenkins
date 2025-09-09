@@ -7,6 +7,7 @@ repos += load "${env.WORKSPACE}/gitRepos/maxidoge.groovy"
 repos += load "${env.WORKSPACE}/gitRepos/btchyper.groovy"
 repos += load "${env.WORKSPACE}/gitRepos/btcbullcoin.groovy"
 repos += load "${env.WORKSPACE}/gitRepos/snorter.groovy"
+repos += load "${env.WORKSPACE}/gitRepos/pepenode.groovy"
 
 return repos.collect { repo ->
     repo.envs = repo.envs.collect { env ->
