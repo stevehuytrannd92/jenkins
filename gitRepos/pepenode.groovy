@@ -1,4 +1,3 @@
-// repos/maxidoge.groovy
 return [
     [
         url: 'git@github.com-stevehuytrannd92:stevehuytrannd92/presale.git',
