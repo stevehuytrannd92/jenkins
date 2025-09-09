@@ -4,7 +4,7 @@ return [
         url: 'git@github.com-stevehuytrannd92:stevehuytrannd92/presale.git',
         branch: 'presale_pepenode',
         folder: 'pepenode',
-        credId: 'id_ed25519_xenonalphae',
+        credId: 'id_ed25519_stevehuytrannd92',
 
         vpsRef : 'vps1',   // 👈 just reference which VPS to use
 

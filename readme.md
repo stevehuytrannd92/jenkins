@@ -53,7 +53,6 @@ ssh ${vpsUser}@${vpsHost} 'nginx -t && systemctl reload nginx'
 
 ssh -i /Users/steve/Coding/Jenkins/keys/Test123.pem ubuntu@165.154.235.205
 
-ssh -i keys/Test123.pem root@165.154.235.205
 
 
 
