@@ -76,7 +76,7 @@ def generateNginxConfigs() {
                 sshagent(credentials: [vpsInfo.vpsCredId]) {
                     sh """
                         # Copy config to VPS
-                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost}  "mkdir -p /home/root"
+                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost}  "mkdir -p /home/${vpsInfo.vpsUser}"
 
                         scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${vpsInfo.vpsUser}@${vpsInfo.vpsHost}:/home/${vpsInfo.vpsUser}/${tmpConfigFile}
 
@@ -297,6 +297,7 @@ pipeline {
                             sshagent (credentials: [vpsInfo.vpsCredId]) {
                                 def exists = sh(
                                     script: """
+
                                         ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} \
                                         "sudo test -f /etc/letsencrypt/live/${domain}/fullchain.pem && echo yes || echo no"
                                     """,
