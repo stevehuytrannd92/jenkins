@@ -76,6 +76,8 @@ def generateNginxConfigs() {
                 sshagent(credentials: [vpsInfo.vpsCredId]) {
                     sh """
                         # Copy config to VPS
+                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost}  "mkdir -p /home/root"
+
                         scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${vpsInfo.vpsUser}@${vpsInfo.vpsHost}:/home/${vpsInfo.vpsUser}/${tmpConfigFile}
 
                         # SSH into VPS and deploy
