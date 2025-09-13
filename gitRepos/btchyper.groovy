@@ -4,6 +4,7 @@ return [
         branch: 'btchyper',
         folder: 'btchyper',
         credId: 'id_ed25519_stevehuytrannd92',
+        buildType: 'nextjs',
 
         vpsRef : 'vps1',   // 👈 just reference which VPS to use
         envs: [
