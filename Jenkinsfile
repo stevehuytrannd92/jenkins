@@ -343,6 +343,10 @@ pipeline {
                     repos.each { repo ->
                         repo.envs.eachWithIndex { envConf, idx ->
                             parallelBuilds["build-${envConf.name}"] = {
+                                if (!params.FORCE_BUILD_ALL && !redisState.isNewCommit(repo.folder)) {
+                                    echo "⏭️ Skipping setup for ${repo.folder}, no changes detected"
+                                    return
+                                }
                                 buildUtils.build(repo, envConf);
                             }
                         }
