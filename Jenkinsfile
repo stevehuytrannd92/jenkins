@@ -92,7 +92,7 @@ pipeline {
         )
         string(
             name: 'MAX_PARALLEL',
-            defaultValue: '5',
+            defaultValue: '4',
             description: 'Maximum number of tasks to run in parallel'
         )
 
