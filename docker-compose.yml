@@ -1,0 +1,32 @@
+services:
+  jenkins:
+    build:
+      context: .          # folder where your Dockerfile lives
+      dockerfile: Dockerfile.jenkins  # optional if not named "Dockerfile"    container_name: jenkins-sandbox
+    container_name: jenkins-sandbox
+    ports:
+      - "12000:8080"
+      - "12001:50000"
+    networks:
+      - jenkins_net
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    restart: unless-stopped
+
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - jenkins_net
+    restart: unless-stopped
+
+networks:
+  jenkins_net:
+    driver: bridge
+
+volumes:
+  jenkins_home:
+    external: true
