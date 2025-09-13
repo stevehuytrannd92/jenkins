@@ -293,6 +293,7 @@ pipeline {
                             sshagent (credentials: [vpsInfo.vpsCredId]) {
                                 def exists = sh(
                                     script: """
+
                                         ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} \
                                         "sudo test -f /etc/letsencrypt/live/${domain}/fullchain.pem && echo yes || echo no"
                                     """,
