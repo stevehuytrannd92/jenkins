@@ -11,6 +11,15 @@ return [
 
         envs: [
           
+            [ 
+                MAIN_DOMAIN:'https://maxidog.io/',
+                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
+                LOGO_PATH:'/img/maxidoge/logo.svg',
+                MAIN_GTAG:'G-BS0FWQNNNZ',
+                MAIN_SITENAME:'maxidoge',
+                MAIN_TWITTER:'@maxidoge',
+                OG_PATH:'/img/maxidoge/OG.jpeg'
+            ],
         ]
 
     ]

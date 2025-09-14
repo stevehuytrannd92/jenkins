@@ -3,7 +3,7 @@ def loadRepos(String name) {
 }
 
 def repos = []
-// repos += load "${env.WORKSPACE}/gitRepos/maxidoge.groovy"
+repos += load "${env.WORKSPACE}/gitRepos/maxidoge.groovy"
 repos += load "${env.WORKSPACE}/gitRepos/btchyper.groovy"
 repos += load "${env.WORKSPACE}/gitRepos/btcbullcoin.groovy"
 repos += load "${env.WORKSPACE}/gitRepos/snorter.groovy"
