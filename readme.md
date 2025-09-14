@@ -52,6 +52,7 @@ ssh ${vpsUser}@${vpsHost} 'nginx -t && systemctl reload nginx'
 
 
 ssh -i /Users/steve/Coding/Jenkins/keys/Test123.pem ubuntu@165.154.235.205
+ssh -i /Users/steve/Coding/Jenkins/keys/hostinger_key.pem root@156.67.218.212
 
 
 
@@ -94,3 +95,26 @@ redundant.each { cert ->
         "
     """
 }
+
+
+sudo certbot certificates
+sudo cat /etc/letsencrypt/renewal/api.memepush.com.conf
+
+
+grep -R "account =" /etc/letsencrypt/renewal/
+
+
+ls /etc/letsencrypt/accounts/acme-v02.api.letsencrypt.org/directory/
+
+
+cat /etc/letsencrypt/accounts/acme-v02.api.letsencrypt.org/directory/5b5057805855dfaabbd69a9752be6f2e/meta.json
+## check account cerbot and replace ## 
+sudo sed -i 's/^account = .*/account = 5b5057805855dfaabbd69a9752be6f2e/' /etc/letsencrypt/renewal/*.conf
+
+grep -R "account =" /etc/lexstsencrypt/renewal/
+
+sudo certbot renew --dry-run
+
+sudo rm -rf /etc/letsencrypt/accounts/acme-v02.api.letsencrypt.org/directory/7d3a8b67d95da1c20959bc2b4a5f6f7b*
+
+

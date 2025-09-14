@@ -167,6 +167,7 @@ pipeline {
                                         "
                                         # Verify deployed config
                                         ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "cat /etc/nginx/sites-available/${tmpConfigFile}"
+                                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "ls -lh /etc/nginx/sites-enabled/"
                                     """
 
                                     // Ensure webroot folder and issue new cert
