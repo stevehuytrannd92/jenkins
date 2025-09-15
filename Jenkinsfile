@@ -215,31 +215,37 @@ pipeline {
                 script {
                     def changedRepos = redisState.getChangedRepos() as List
                     def reposToCheck = params.FORCE_BUILD_ALL ? repos : repos.findAll { r -> changedRepos.contains(r.folder) }
+                    def parallelTasks = [:]
 
                     reposToCheck.each { repo ->
                         def vpsInfo = vpsInfos[repo.vpsRef]
                         repo.envs.each { site ->
-                            def domain = commonUtils.extractDomain(site.MAIN_DOMAIN)
+                            parallelTasks["check-${site.MAIN_DOMAIN}"] = {
 
-                            sshagent (credentials: [vpsInfo.vpsCredId]) {
-                                def exists = sh(
-                                    script: """
+                                def domain = commonUtils.extractDomain(site.MAIN_DOMAIN)
 
-                                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} \
-                                        "sudo test -f /etc/letsencrypt/live/${domain}/fullchain.pem && echo yes || echo no"
-                                    """,
-                                    returnStdout: true
-                                ).trim()
+                                sshagent (credentials: [vpsInfo.vpsCredId]) {
+                                    def exists = sh(
+                                        script: """
 
-                                if (exists == "no") {
-                                    echo "⚠️  Certificate missing for ${domain}"
-                                    redisState.addMissingCert(domain)
-                                } else {
-                                    echo "✅ Certificate exists for ${domain}"
+                                            ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} \
+                                            "sudo test -f /etc/letsencrypt/live/${domain}/fullchain.pem && echo yes || echo no"
+                                        """,
+                                        returnStdout: true
+                                    ).trim()
+
+                                    if (exists == "no") {
+                                        echo "⚠️  Certificate missing for ${domain}"
+                                        redisState.addMissingCert(domain)
+                                    } else {
+                                        echo "✅ Certificate exists for ${domain}"
+                                    }
                                 }
                             }
                         }
                     }
+
+                    runWithMaxParallel(parallelTasks, params.MAX_PARALLEL.toInteger())  // 👈 cap parallelism
 
                     if (redisState.getMissingCerts()) {
                         echo "⚠️  Some certificates are missing: ${redisState.getMissingCerts()}"
@@ -294,19 +300,18 @@ pipeline {
                     def parallelTasks = [:]
 
                     repos.each { repo ->
-                        parallelTasks["Repo-${repo.folder}"] = {
-                            if (!params.FORCE_BUILD_ALL && !redisState.isNewCommit(repo.folder)) {
-                                echo "⏭️ Skipping build for ${repo.folder}, no changes detected"
-                                return
-                            }
-                            repo.envs.eachWithIndex { envConf, idx ->
+                        if (!params.FORCE_BUILD_ALL && !redisState.isNewCommit(repo.folder)) {
+                            echo "⏭️ Skipping build for ${repo.folder}, no changes detected"
+                            return
+                        }
+                        repo.envs.eachWithIndex { envConf, idx ->
+                            parallelTasks["deploy-${envConf.name}"] = {
                                 deployUtils.deploy(repo, envConf, vpsInfos)
                             }
                         }
                     }
 
-                    runWithMaxParallel(parallelTasks, 3)  // 👈 cap parallelism
-
+                    runWithMaxParallel(parallelTasks, params.MAX_PARALLEL.toInteger())  // 👈 cap parallelism
 
                 }
             }
@@ -316,6 +321,8 @@ pipeline {
             steps {
                 script {
                     def changedRepos = redisState.getChangedRepos()
+                    def parallelTasks = [:]
+
                     if (!params.FORCE_BUILD_ALL && !changedRepos) {
                         echo "⏭️ Skipping nginx reload, no changes detected"
                         return
@@ -323,11 +330,13 @@ pipeline {
 
                     repos.each { repo ->
                         repo.envs.each { envConf ->
-                            nginxUtils.generate(repo, envConf, vpsInfos )
+                            parallelTasks["nginx-${envConf.name}"] = {
+                                nginxUtils.generate(repo, envConf, vpsInfos )
+                            }
                         }
-                    
                     }
 
+                    runWithMaxParallel(parallelTasks, params.MAX_PARALLEL.toInteger())  // 👈 cap parallelism
 
                     vpsInfos.values().each { vpsConf -> 
                         sshagent(credentials: [vpsConf.vpsCredId]) {
