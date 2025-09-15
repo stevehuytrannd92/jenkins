@@ -62,8 +62,6 @@ pipeline {
             }
         }
 
-
-
         stage('Load Script') {
             steps {
                 script {
@@ -73,7 +71,6 @@ pipeline {
                 }
             }
         }
-
 
         stage('Verify repo envs') {
             steps {
