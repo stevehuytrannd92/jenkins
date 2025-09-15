@@ -17,67 +17,6 @@ def runWithMaxParallel(tasks, maxParallel = 3) {
     }
 }
 
-// def generateNginxConfigs() {
-//     repos.each { repo ->
-//         if (!params.FORCE_BUILD_ALL && !state().hasChangedRepo(repo.folder)) {
-//             echo "⏭️ Skipping nginx config for ${repo.folder}, no changes detected"
-//             return
-//         }
-
-//         def vpsInfo = vpsInfos[repo.vpsRef]
-//         dir(repo.folder) {
-//             repo.envs.each { envConf ->
-//                 def domain = commonUtils.extractDomain(envConf.MAIN_DOMAIN)
-
-//                 if (state().hasMissingCert(domain)) {
-//                     echo "⏭️ Skipping nginx config for ${envConf.name} (${domain}) due to missing cert"
-//                     return
-//                 }
-
-//                 def tmpConfigFile = "${envConf.name}.conf"
-//                 def nginxConfig = ngnixTemplate
-//                     .replace('{{DOMAIN}}', domain)
-//                     .replace('{{ENV_NAME}}', envConf.name)
-//                     .replace('{{WEBROOT_BASE}}', vpsInfo.webrootBase)
-
-//                 writeFile(file: tmpConfigFile, text: nginxConfig)
-//                 echo "✅ Generated Nginx config for ${envConf.name} locally: ${tmpConfigFile}"
-//                 echo "📄 Local nginx config content for ${envConf.name}:\n${nginxConfig}"
-
-//                 sshagent(credentials: [vpsInfo.vpsCredId]) {
-//                     sh """
-//                         # Copy config to VPS
-//                         scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${vpsInfo.vpsUser}@${vpsInfo.vpsHost}:/home/${vpsInfo.vpsUser}/${tmpConfigFile}
-
-//                         # SSH into VPS and deploy
-//                         ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "
-
-//                             # 👉 Remove all conflicting enabled sites for this domain
-//                             for f in /etc/nginx/sites-enabled/*; do
-//                                 if grep -qE \\"server_name .*(${domain}).*;\\" \"\$f\"; then
-//                                     echo 'Removing conflicting site: \$f'
-//                                 fi
-//                             done
-
-//                             sudo mv /home/${vpsInfo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
-//                             sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile} &&
-
-
-//                             # 👉 activate only this site
-//                             sudo ln -sf /etc/nginx/sites-available/${tmpConfigFile} /etc/nginx/sites-enabled/${tmpConfigFile} 
-//                         "
-
-//                         # Optional: view deployed config
-//                         ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "cat /etc/nginx/sites-available/${tmpConfigFile}"
-//                     """
-//                 }
-
-//             }
-//         }
-//     }
-// }
-
-
 pipeline {
     agent any
     tools {
@@ -130,13 +69,6 @@ pipeline {
                 script {
                     repos = load 'repos.groovy'
                     vpsInfos = load 'vps.groovy'
-                    // ngnixTemplate = readFile('ngnix/https.template.conf')
-
-                    // buildUtils  = load 'lib/buildUtils.groovy'
-
-                    // state = pipelineState()   // from vars/pipelineState.groovy
-                    // deployUtils = load 'lib/deployUtils.groovy'
-                    // nginxUtils  = load 'lib/nginxUtils.groovy'   
 
                 }
             }
@@ -356,91 +288,6 @@ pipeline {
             }
         }
 
-        // stage('Build Projects') {
-        //     steps {
-        //         script {
-        //             def parallelBuilds = [:]
-
-        //             repos.each { repo ->
-        //                 parallelBuilds["Repo-${repo.folder}"] = {
-        //                     if (!params.FORCE_BUILD_ALL && !state().hasChangedRepo(repo.folder)) {
-        //                         echo "⏭️ Skipping build for ${repo.folder}, no changes detected"
-        //                         return
-        //                     }
-
-        //                     def vpsInfo = vpsInfos[repo.vpsRef]
-        //                     dir(repo.folder) {
-        //                         repo.envs.eachWithIndex { envConf, idx ->
-        //                             buildUtils.build(repo, envConf, idx)  // 👈 global var
-        //                             // def domain = extractDomain(envConf.MAIN_DOMAIN)
-
-        //                             // if (isMissingCert(domain)) {
-        //                             //     echo "⏭️ Skipping build for ${envConf.name} (${domain}) due to missing cert"
-        //                             //     return
-        //                             // }
-
-        //                             // echo "=== Building ${repo.folder} branch >>${repo.branch}<< for environment: ${envConf.name} ==="
-
-        //                             // withEnv(envConf.collect { k,v -> "${k.toUpperCase()}=${v}" } ) {
-        //                             //     if (idx == 0) {
-        //                             //         // 👉 First env: full CI build
-        //                             //         sh '''
-        //                             //             if [ -f package.json ]; then
-        //                             //                 export CI=true
-        //                             //                 npm ci
-        //                             //                 npx next build && npx next-sitemap
-
-        //                             //                 if [ -d .next ]; then
-        //                             //                     rm -rf .next/cache || true
-        //                             //                     rm -rf .next/server || true
-        //                             //                     rm -rf .next/**/*.nft.json || true
-        //                             //                 fi
-        //                             //             else
-        //                             //                 echo "No package.json found, skipping build."
-        //                             //             fi
-        //                             //         '''
-        //                             //     } else {
-        //                             //         sh '''
-        //                             //             if [ -f package.json ]; then
-        //                             //                 npx next build && npx next-sitemap
-
-        //                             //                 if [ -d .next ]; then
-        //                             //                     rm -rf .next/cache || true
-        //                             //                     rm -rf .next/server || true
-        //                             //                     rm -rf .next/**/*.nft.json || true
-        //                             //                 fi
-        //                             //             else
-        //                             //                 echo "No package.json found, skipping build."
-        //                             //             fi
-        //                             //         '''                                        
-        //                             //     }
-
-        //                             //     def envOut = "outs/${envConf.name}"
-        //                             //     sh """
-        //                             //         mkdir -p outs
-        //                             //         rm -rf ${envOut} || true
-        //                             //         cp -r out ${envOut} || echo "⚠️ Warning: 'out' folder missing, copy skipped"
-        //                             //     """
-
-        //                             //     sh """
-        //                             //         if [ -d ${envOut} ] && [ "\$(ls -A ${envOut})" ]; then
-        //                             //             echo "✅ Build output exists for ${repo.folder}/${envConf.name}"
-        //                             //         else
-        //                             //             echo "❌ ERROR: ${envOut} missing or empty for ${repo.folder}"
-        //                             //             exit 1
-        //                             //         fi
-        //                             //     """
-        //                             // }
-        //                         }
-        //                     }
-        //                 }
-        //             }
-
-        //             runWithMaxParallel(parallelBuilds, params.MAX_PARALLEL.toInteger())  // 👈 cap parallelism
-        //         }
-        //     }
-        // }
-
         stage('Deploy Outs to VPS') {
             steps {
                 script {
@@ -455,34 +302,6 @@ pipeline {
                             repo.envs.eachWithIndex { envConf, idx ->
                                 deployUtils.deploy(repo, envConf, vpsInfos)
                             }
-                            // def vpsInfo = vpsInfos[repo.vpsRef]
-                            // dir(repo.folder) {
-                            //     repo.envs.each { envConf ->
-                            //         def domain = extractDomain(envConf.MAIN_DOMAIN)
-
-                            //         if (state().hasMissingCert(domain)) {
-                            //             echo "⏭️ Skipping deploy for ${envConf.name} (${domain}) due to missing cert"
-                            //             return
-                            //         }
-
-                            //         def envOut = "outs/${envConf.name}"
-                            //         echo "🚀 Deploying ${envOut} to ${vpsInfo.vpsHost}:${vpsInfo.webrootBase}/${envConf.name}"
-
-                            //         sshagent (credentials: [vpsInfo.vpsCredId]) {
-                            //             sh """
-                            //                 tar -czf ${envConf.name}.tar.gz -C outs/${envConf.name} .
-                            //                 scp -o StrictHostKeyChecking=no ${envConf.name}.tar.gz ${vpsInfo.vpsUser}@${vpsInfo.vpsHost}:/tmp/
-
-                            //                 ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "
-                            //                     sudo mkdir -p ${vpsInfo.webrootBase}/${envConf.name} &&
-                            //                     sudo tar -xzf /tmp/${envConf.name}.tar.gz -C ${vpsInfo.webrootBase}/${envConf.name} &&
-                            //                     rm /tmp/${envConf.name}.tar.gz &&
-                            //                     sudo chown -R www-data:www-data ${vpsInfo.webrootBase}/${envConf.name}
-                            //                 "
-                            //             """
-                            //         }
-                            //     }
-                            // }
                         }
                     }
 
@@ -508,8 +327,6 @@ pipeline {
                         }
                     
                     }
-
-                    // generateNginxConfigs()
 
 
                     vpsInfos.values().each { vpsConf -> 
