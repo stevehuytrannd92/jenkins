@@ -6,19 +6,21 @@ repos += load "${env.WORKSPACE}/gitRepos/snorter.groovy"
 repos += load "${env.WORKSPACE}/gitRepos/dogeverse.groovy"
 repos += load "${env.WORKSPACE}/gitRepos/pepenode.groovy"
 
-return repos.collect { repo ->
-    repo.envs = repo.envs.collect { env ->
-        def domain = env.MAIN_DOMAIN
+// Extract only MAIN_DOMAIN + vpsRef
+def repoDomains = repos.collectMany { repo ->
+    (repo.envs ?: []).collect { env ->
+        def formatedDomain = env.MAIN_DOMAIN
             .replaceAll(/^https?:\/\//, '')   // remove protocol
             .replaceAll(/\/$/, '')            // remove trailing slash
             .replaceAll(/[^a-zA-Z0-9]/, '_')  // replace special chars with underscore
             .replaceAll(/_+/, '_')            // collapse consecutive underscores
             .toLowerCase()                    // optional: normalize case
-
-        env.name = domain
-        return env
+        return [
+            "MAIN_DOMAIN" : env.MAIN_DOMAIN,
+            "vpsRef" : repo.vpsRef,
+            "name": formatedDomain
+        ]
     }
-    return repo
 }
 
-
+return repoDomains
