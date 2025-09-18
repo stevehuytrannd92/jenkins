@@ -164,8 +164,6 @@ pipeline {
 
                                     # Move config into sites-available & enable
                                     ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "
-                                         # ❌ Clear all enabled sites
-                                        sudo rm -f /etc/nginx/sites-enabled/* &&
                                         
                                         sudo mv /home/${vpsInfo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
                                         sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile} &&
