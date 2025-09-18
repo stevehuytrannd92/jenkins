@@ -325,6 +325,19 @@ pipeline {
                         return
                     }
 
+                    vpsInfos.values().each { vpsConf -> 
+                        sshagent(credentials: [vpsConf.vpsCredId]) {
+                            sh """
+                                ssh -o StrictHostKeyChecking=no ${vpsConf.vpsUser}@${vpsConf.vpsHost} "
+
+                                    sudo rm -f /etc/nginx/sites-enabled/*
+                                    
+                                "
+                            """
+                        }
+                    }
+
+
                     repos.each { repo ->
                         repo.envs.each { envConf ->
                             parallelTasks["nginx-${envConf.name}"] = {
