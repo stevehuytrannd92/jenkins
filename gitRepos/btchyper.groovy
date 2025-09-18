@@ -17,15 +17,6 @@ return [
                 MAIN_TWITTER:'@btchyper',
                 OG_PATH:'/img/btchyper/OG.jpeg'
             ],
-            [ 
-                MAIN_DOMAIN:'https://btchypercoin.com/',
-                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
-                LOGO_PATH:'/img/btchyper/token.svg',
-                MAIN_GTAG:'G-RKFMME3BTM',
-                MAIN_SITENAME:'btchyper',
-                MAIN_TWITTER:'@btchyper',
-                OG_PATH:'/img/btchyper/OG.jpeg'
-            ],
         ]
 
     ],
