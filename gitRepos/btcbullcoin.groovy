@@ -9,6 +9,15 @@ return [
         vpsRef : 'vps1',   // 👈 just reference which VPS to use
         envs: [
             [ 
+                MAIN_DOMAIN:'https://btcbullcoin.io/',
+                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
+                LOGO_PATH:'/img/btcbull/logo.png',
+                MAIN_GTAG:'G-GR6Q9PM18Q',
+                MAIN_SITENAME:'btcbull',
+                MAIN_TWITTER:'@btcbull',
+                OG_PATH:'img/btcbull/OG.jpeg'
+            ],
+            [ 
                 MAIN_DOMAIN:'https://thebtcbull.com/',
                 BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
                 LOGO_PATH:'/img/btcbull/logo.png',
