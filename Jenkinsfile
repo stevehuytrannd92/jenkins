@@ -270,7 +270,7 @@ pipeline {
                         }
                     }
 
-                    runWithMaxParallel(parallelSetups, params.MAX_PARALLEL.toInteger())  // 👈 cap parallelism
+                    runWithMaxParallel(parallelSetups, 3)  // 👈 cap parallelism
 
                     def parallelBuilds = [:]
 

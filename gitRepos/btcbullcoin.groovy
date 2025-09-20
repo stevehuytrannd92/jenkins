@@ -26,6 +26,15 @@ return [
                 MAIN_TWITTER:'@btcbull',
                 OG_PATH:'img/btcbull/OG.jpeg'
             ],
+            [ 
+                MAIN_DOMAIN:'https://btcbullcoin.com/',
+                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
+                LOGO_PATH:'/img/btcbull/logo.png',
+                MAIN_GTAG:'G-GR6Q9PM18Q',
+                MAIN_SITENAME:'btcbull',
+                MAIN_TWITTER:'@btcbull',
+                OG_PATH:'img/btcbull/OG.jpeg'
+            ],
             [
                 MAIN_DOMAIN:'https://btcxbull.com/',
                 BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
