@@ -17,6 +17,7 @@ def runWithMaxParallel(tasks, maxParallel = 3) {
     }
 }
 
+
 pipeline {
     agent any
     tools {
@@ -28,6 +29,11 @@ pipeline {
             name: 'FORCE_BUILD_ALL',
             defaultValue: false,
             description: 'Force build & deploy all repos, even if no new changes'
+        )
+        booleanParam(
+            name: 'REMOVE_ALL_NGINX',
+            defaultValue: false,
+            description: 'Force remove all nginx on build and replace enable sites only'
         )
         string(
             name: 'MAX_PARALLEL',
@@ -62,6 +68,8 @@ pipeline {
             }
         }
 
+
+
         stage('Load Script') {
             steps {
                 script {
@@ -71,6 +79,7 @@ pipeline {
                 }
             }
         }
+
 
         stage('Verify repo envs') {
             steps {
@@ -242,7 +251,7 @@ pipeline {
                         }
                     }
 
-                    runWithMaxParallel(parallelTasks, params.MAX_PARALLEL.toInteger())  // 👈 cap parallelism
+                    runWithMaxParallel(parallelTasks, 3)  // 👈 cap parallelism
 
                     if (redisState.getMissingCerts()) {
                         echo "⚠️  Some certificates are missing: ${redisState.getMissingCerts()}"
@@ -308,7 +317,7 @@ pipeline {
                         }
                     }
 
-                    runWithMaxParallel(parallelTasks, params.MAX_PARALLEL.toInteger())  // 👈 cap parallelism
+                    runWithMaxParallel(parallelTasks, 3)  // 👈 cap parallelism
 
                 }
             }
@@ -324,19 +333,21 @@ pipeline {
                         echo "⏭️ Skipping nginx reload, no changes detected"
                         return
                     }
+                    
+                    if (params.REMOVE_ALL_NGINX ) {
+                        echo "⏭️ Remove all sites before place new enable sites."
+                        vpsInfos.values().each { vpsConf -> 
+                            sshagent(credentials: [vpsConf.vpsCredId]) {
+                                sh """
+                                    ssh -o StrictHostKeyChecking=no ${vpsConf.vpsUser}@${vpsConf.vpsHost} "
 
-                    vpsInfos.values().each { vpsConf -> 
-                        sshagent(credentials: [vpsConf.vpsCredId]) {
-                            sh """
-                                ssh -o StrictHostKeyChecking=no ${vpsConf.vpsUser}@${vpsConf.vpsHost} "
-
-                                    sudo rm -f /etc/nginx/sites-enabled/*
-                                    
-                                "
-                            """
+                                        sudo rm -f /etc/nginx/sites-enabled/*
+                                        
+                                    "
+                                """
+                            }
                         }
                     }
-
 
                     repos.each { repo ->
                         repo.envs.each { envConf ->
@@ -346,7 +357,7 @@ pipeline {
                         }
                     }
 
-                    runWithMaxParallel(parallelTasks, params.MAX_PARALLEL.toInteger())  // 👈 cap parallelism
+                    runWithMaxParallel(parallelTasks, 3)  // 👈 cap parallelism
 
                     vpsInfos.values().each { vpsConf -> 
                         sshagent(credentials: [vpsConf.vpsCredId]) {
