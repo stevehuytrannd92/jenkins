@@ -31,7 +31,7 @@ pipeline {
                             .replaceAll('/','')
                             .replaceAll('^www\\.', '')
 
-                        def url = "http://${domain}"
+                        def url = "https://${domain}"
 
                         // 🔍 Try resolving IP
                         def domainIp = sh(
