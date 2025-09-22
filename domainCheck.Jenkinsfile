@@ -1,68 +1,57 @@
-pipeline {
-    agent any
-    triggers {
-        cron('0 0,12 * * *')
-    }
+stage('Check Domain Resolution') {
+    steps {
+        script {
+            def wrongDomains = []
 
-    options {
-        disableConcurrentBuilds()   // 🚫 no concurrent runs
-    }
+            repos.each { repo ->
+                def vpsInfo = vpsInfos[repo.vpsRef]
+                def domain = repo.MAIN_DOMAIN
+                    .replaceAll('https://','')
+                    .replaceAll('http://','')
+                    .replaceAll('/','')
+                    .replaceAll('^www\\.', '')
 
-    stages {
-        stage('Load Script') {
-            steps {
-                script {
-                    repos = load 'domains.groovy'
-                    vpsInfos = load 'vps.groovy'
+                def url = "http://${domain}"
+
+                // 🔍 Try resolving IP
+                def domainIp = sh(
+                    script: "dig +short ${domain} | tail -n1",
+                    returnStdout: true
+                ).trim()
+
+                // 🌐 Do HTTP check (curl returns HTTP code only)
+                def httpCode = sh(
+                    script: "curl -s -o /dev/null -w \"%{http_code}\" --max-time 10 ${url}",
+                    returnStdout: true
+                ).trim()
+
+                if (!domainIp) {
+                    echo "⚠️ Domain ${domain} could not be resolved"
+                    wrongDomains << [domain: domain, reason: "Unresolvable", expected: vpsInfo.vpsHost]
+                } else if (httpCode != "200") {
+                    echo "❌ Domain ${domain} resolved to ${domainIp} but HTTP returned ${httpCode}"
+                    wrongDomains << [domain: domain, reason: "HTTP ${httpCode}", resolved: domainIp, expected: vpsInfo.vpsHost]
+                } else if (domainIp != vpsInfo.vpsHost) {
+                    echo "❌ Domain ${domain} resolves to ${domainIp}, expected ${vpsInfo.vpsHost}"
+                    wrongDomains << [domain: domain, reason: "IP mismatch", resolved: domainIp, expected: vpsInfo.vpsHost]
+                } else {
+                    echo "✅ Domain ${domain} resolves correctly to ${domainIp} and HTTP ${httpCode}"
                 }
             }
-        }
 
-        stage('Check Domain Resolution') {
-            steps {
-                script {
-                    def wrongDomains = []
-
-                    repos.each { repo ->
-                        def vpsInfo = vpsInfos[repo.vpsRef]
-                        def domain = repo.MAIN_DOMAIN
-                            .replaceAll('https://','')
-                            .replaceAll('http://','')
-                            .replaceAll('/','')
-                            .replaceAll('^www\\.', '')
-
-                        def domainIp = sh(
-                            script: "dig +short ${domain} | tail -n1",
-                            returnStdout: true
-                        ).trim()
-
-                        if (!domainIp) {
-                            echo "⚠️ Domain ${domain} could not be resolved"
-                            wrongDomains << [domain: domain, reason: "Unresolvable", expected: vpsInfo.vpsHost]
-                        } else if (domainIp != vpsInfo.vpsHost) {
-                            echo "❌ Domain ${domain} resolves to ${domainIp}, expected ${vpsInfo.vpsHost}"
-                            wrongDomains << [domain: domain, reason: "IP mismatch", resolved: domainIp, expected: vpsInfo.vpsHost]
-                        } else {
-                            echo "✅ Domain ${domain} resolves correctly to ${domainIp}"
-                        }
-                    }
-
-                    if (wrongDomains) {
-                        echo "🚨 Wrong domains detected:"
-                        wrongDomains.each { d ->
-                            echo " - ${d.domain} (${d.reason}): resolved=${d.resolved ?: 'none'}, expected=${d.expected}"
-                        }
-
-                        // 👀 Optionally write to a log file for external monitoring
-                        writeFile file: "wrong_domains.log", text: wrongDomains.collect { d ->
-                            "${d.domain}, reason=${d.reason}, resolved=${d.resolved ?: 'none'}, expected=${d.expected}"
-                        }.join("\n")
-
-                        archiveArtifacts artifacts: 'wrong_domains.log', onlyIfSuccessful: false
-                    } else {
-                        echo "✨ All domains resolve to expected IPs"
-                    }
+            if (wrongDomains) {
+                echo "🚨 Wrong domains detected:"
+                wrongDomains.each { d ->
+                    echo " - ${d.domain} (${d.reason}): resolved=${d.resolved ?: 'none'}, expected=${d.expected}"
                 }
+
+                // writeFile file: "wrong_domains.log", text: wrongDomains.collect { d ->
+                //     "${d.domain}, reason=${d.reason}, resolved=${d.resolved ?: 'none'}, expected=${d.expected}"
+                // }.join("\n")
+
+                // archiveArtifacts artifacts: 'wrong_domains.log', onlyIfSuccessful: false
+            } else {
+                echo "✨ All domains resolve and respond correctly"
             }
         }
     }
