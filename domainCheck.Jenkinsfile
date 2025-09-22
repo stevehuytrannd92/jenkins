@@ -35,7 +35,7 @@ pipeline {
 
                         // 🌐 Do HTTP check (curl returns HTTP code only)
                         def httpCode = sh(
-                            script: "curl -s -o /dev/null -w \"%{http_code}\" --max-time 10 ${url}",
+                            script: "curl -s -o /dev/null -w \"%{http_code}\" --max-time 100 ${url}",
                             returnStdout: true
                         ).trim()
 
