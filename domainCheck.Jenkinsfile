@@ -40,10 +40,10 @@ pipeline {
                         ).trim()
 
                         if (httpCode != "200") {
-                            echo "❌ Domain ${domain} resolved to ${domainIp} but HTTP returned ${httpCode}"
-                            wrongDomains << [domain: domain, reason: "HTTP ${httpCode}", resolved: domainIp, expected: vpsInfo.vpsHost]
+                            echo "❌ Domain ${domain} HTTP returned ${httpCode}"
+                            wrongDomains << [domain: domain, reason: "HTTP ${httpCode}"]
                         } else {
-                            echo "✅ Domain ${domain} resolves correctly to ${domainIp} and HTTP ${httpCode}"
+                            echo "✅ Domain ${domain} resolves HTTP ${httpCode}"
                         }
                     }
 
