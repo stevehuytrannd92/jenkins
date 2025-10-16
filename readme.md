@@ -74,7 +74,7 @@ rm -rf /var/jenkins_home/workspace/build-web
 
 
 
-# handle link ngnix:
+# handle link nginx:
 ls -l /etc/nginx/sites-enabled/
 sudo rm -r /etc/nginx/sites-enabled/sites-available
 sudo nginx -t

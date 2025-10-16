@@ -18,7 +18,7 @@ pipeline {
                     repos = load 'domains.groovy'
                     vpsInfos = load 'vps.groovy'
 
-                    certbotTemplate = readFile('ngnix/http.template.conf')
+                    certbotTemplate = readFile('nginx/http.template.conf')
                 }
             }
         }
