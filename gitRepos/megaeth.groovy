@@ -2,8 +2,8 @@
 return [
     [
         url: 'git@github.com:stevehuytrannd92/presale.git',
-        branch: 'maxidoge',
-        folder: 'maxidoge',
+        branch: 'presale_megaeth',
+        folder: 'presale_megaeth',
         credId: 'id_ed25519_stevehuytrannd92',
         buildType: 'nextjs',
 
