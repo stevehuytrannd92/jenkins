@@ -1,7 +1,10 @@
+// This annotation tells Jenkins to load the library you configured
+@Library('my-shared-library') _ 
+
 pipeline {
     agent any
     triggers {
-        cron('30 2 * * *')
+        cron('30 23 * * *')
     }
 
     options {
@@ -17,8 +20,6 @@ pipeline {
                 script {
                     repos = load 'domains.groovy'
                     vpsInfos = load 'vps.groovy'
-
-                    certbotTemplate = readFile('nginx/http.template.conf')
                 }
             }
         }
@@ -60,11 +61,16 @@ pipeline {
                             // list all certs in /etc/letsencrypt/live
                             def existingCerts = sh(
                                 script: """
-                                    ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} \
-                                    'sudo ls -1 /etc/letsencrypt/live 2>/dev/null || echo "No certs found"'
+                                    ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} '
+                                        (
+                                            sudo ls -1 /etc/letsencrypt/live 2>/dev/null;
+                                            sudo ls -1 /etc/ssl/cloudflare 2>/dev/null
+                                        ) | grep -v "No such file" | sort | uniq
+                                    '
                                 """,
                                 returnStdout: true
                             ).trim().split("\\r?\\n") as List
+
 
                             echo "📜 VPS ${vpsInfo.vpsHost} has certs: ${existingCerts}"
                             echo "✅ Expected for repos: ${domains}"
@@ -72,12 +78,12 @@ pipeline {
                             def redundant = existingCerts.findAll { !domains.contains(it) }
                             if (redundant) {
                                 echo "🗑️ Removing redundant certs on ${vpsInfo.vpsHost}: ${redundant}"
-                                redundant.each { cert ->
-                                    sh """
-                                        ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} \\
-                                        "sudo certbot delete --cert-name ${cert} --non-interactive --quiet || true"
-                                    """
-                                }
+                                // redundant.each { cert ->
+                                //     sh """
+                                //         ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} \\
+                                //         "sudo certbot delete --cert-name ${cert} --non-interactive --quiet || true"
+                                //     """
+                                // }
 
                             } else {
                                 echo "✨ No redundant certs to remove on ${vpsInfo.vpsHost}"
@@ -110,7 +116,7 @@ pipeline {
                             def exists = sh(
                                 script: """
                                     ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} \
-                                    "sudo test -f /etc/letsencrypt/live/${domain}/fullchain.pem && echo yes || echo no"
+                                    "if sudo test -f /etc/letsencrypt/live/${domain}/fullchain.pem || sudo test -f /etc/ssl/cloudflare/${domain}/${domain}.crt; then echo yes; else echo no; fi"
                                 """,
                                 returnStdout: true
                             ).trim()
@@ -126,69 +132,70 @@ pipeline {
 
                             } else {
                                 echo "❌ No certificate for ${domain}, issuing new one"
+                                certUtils.generateCert(repo, vpsInfos)
 
                                 // 🌐 Resolve domain to IP
-                                def domainIp = sh(
-                                    script: "dig +short ${domain} | tail -n1",
-                                    returnStdout: true
-                                ).trim()
+                                // def domainIp = sh(
+                                //     script: "dig +short ${domain} | tail -n1",
+                                //     returnStdout: true
+                                // ).trim()
 
-                                if (!domainIp) {
-                                    echo "⚠️ Cannot resolve domain ${domain}, skipping cert issuance."
-                                    return
-                                }
+                                // if (!domainIp) {
+                                //     echo "⚠️ Cannot resolve domain ${domain}, skipping cert issuance."
+                                //     return
+                                // }
 
                                 
 
-                                echo "🔍 Domain ${domain} resolves to ${domainIp}, VPS expected IP is ${vpsInfo.vpsHost}"
+                                // echo "🔍 Domain ${domain} resolves to ${domainIp}, VPS expected IP is ${vpsInfo.vpsHost}"
 
-                                if (domainIp != vpsInfo.vpsHost) {
-                                    echo "❌ Domain ${domain} does not point to expected VPS ${vpsInfo.vpsHost}, skipping cert issuance."
-                                    return
-                                }
+                                // if (domainIp != vpsInfo.vpsHost) {
+                                //     echo "❌ Domain ${domain} does not point to expected VPS ${vpsInfo.vpsHost}, skipping cert issuance."
+                                //     return
+                                // }
 
-                                def tmpConfigFile = "${repo.name}.conf"
+                                // def tmpConfigFile = "${repo.name}.conf"
 
-                                // Replace placeholders in nginx template
-                                def nginxConfig = certbotTemplate
-                                    .replace('{{DOMAIN}}', domain)
-                                    .replace('{{ENV_NAME}}', repo.name)
-                                    .replace('{{WEBROOT_BASE}}', vpsInfo.webrootBase)
+                                // // Replace placeholders in nginx template
+                                // def nginxConfig = certbotTemplate
+                                //     .replace('{{DOMAIN}}', domain)
+                                //     .replace('{{ENV_NAME}}', repo.name)
+                                //     .replace('{{WEBROOT_BASE}}', vpsInfo.webrootBase)
 
-                                writeFile(file: tmpConfigFile, text: nginxConfig)
-                                echo "✅ Generated Nginx config for ${repo.name}: ${tmpConfigFile}"
+                                // writeFile(file: tmpConfigFile, text: nginxConfig)
+                                // echo "✅ Generated Nginx config for ${repo.name}: ${tmpConfigFile}"
 
-                                sh """
-                                    # Upload config
-                                    scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${vpsInfo.vpsUser}@${vpsInfo.vpsHost}:/home/${vpsInfo.vpsUser}/${tmpConfigFile}
+                                // sh """
+                                //     # Upload config
+                                //     scp -o StrictHostKeyChecking=no ${tmpConfigFile} ${vpsInfo.vpsUser}@${vpsInfo.vpsHost}:/home/${vpsInfo.vpsUser}/${tmpConfigFile}
 
-                                    # Move config into sites-available & enable
-                                    ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "
+                                //     # Move config into sites-available & enable
+                                //     ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "
                                         
-                                        sudo mv /home/${vpsInfo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
-                                        sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile} &&
-                                        sudo ln -sf /etc/nginx/sites-available/${tmpConfigFile} /etc/nginx/sites-enabled/${tmpConfigFile} &&
-                                        sudo nginx -t &&
-                                        sudo systemctl reload nginx
-                                    "
-                                    # Verify deployed config
-                                    ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "cat /etc/nginx/sites-available/${tmpConfigFile}"
-                                """
+                                //         sudo mv /home/${vpsInfo.vpsUser}/${tmpConfigFile} /etc/nginx/sites-available/${tmpConfigFile} &&
+                                //         sudo chown root:root /etc/nginx/sites-available/${tmpConfigFile} &&
+                                //         sudo ln -sf /etc/nginx/sites-available/${tmpConfigFile} /etc/nginx/sites-enabled/${tmpConfigFile} &&
+                                //         sudo nginx -t &&
+                                //         sudo systemctl reload nginx
+                                //     "
+                                //     # Verify deployed config
+                                //     ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} "cat /etc/nginx/sites-available/${tmpConfigFile}"
+                                // """
 
-                                // Ensure webroot folder and issue new cert
-                                sh """
-                                    ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} \\
-                                    "sudo mkdir -p ${vpsInfo.webrootBase}/${repo.name}/.well-known/acme-challenge && \\
-                                        sudo chown -R www-data:www-data ${vpsInfo.webrootBase}/${repo.name} && \\
-                                        sudo nginx -t && \\
-                                        sudo systemctl reload nginx && \\
-                                        sudo certbot certonly --webroot -w ${vpsInfo.webrootBase}/${repo.name} \\
-                                        -d ${domain} -d www.${domain} \\
-                                        -v \\
-                                        --agree-tos \\
-                                        --email contact@${domain} \\
-                                        --non-interactive"
-                                """
+                                // // Ensure webroot folder and issue new cert
+                                // sh """
+                                //     ssh -o StrictHostKeyChecking=no ${vpsInfo.vpsUser}@${vpsInfo.vpsHost} \\
+                                //     "sudo mkdir -p ${vpsInfo.webrootBase}/${repo.name}/.well-known/acme-challenge && \\
+                                //         sudo chown -R www-data:www-data ${vpsInfo.webrootBase}/${repo.name} && \\
+                                //         sudo nginx -t && \\
+                                //         sudo systemctl reload nginx && \\
+                                //         sudo certbot certonly --webroot -w ${vpsInfo.webrootBase}/${repo.name} \\
+                                //         -d ${domain} -d www.${domain} \\
+                                //         -v \\
+                                //         --agree-tos \\
+                                //         --email contact@${domain} \\
+                                //         --non-interactive"
+                                // """
                             }
                         }
                         
