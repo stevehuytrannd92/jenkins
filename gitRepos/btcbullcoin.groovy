@@ -62,15 +62,15 @@ return [
                 MAIN_TWITTER:'@btcbull',
                 OG_PATH:'img/btcbull/OG.jpeg'
             ],
-            // [
-            //     MAIN_DOMAIN:'https://btcbullmeme.com/',
-            //     BACKLINKS_URL:'https://btcsymbol.net/public/js/backlinks.json',
-            //     LOGO_PATH:'/img/btcbull/logo.png',
-            //     MAIN_GTAG:'G-GR6Q9PM18Q',
-            //     MAIN_SITENAME:'btcbull',
-            //     MAIN_TWITTER:'@btcbull',
-            //     OG_PATH:'img/btcbull/OG.jpeg'
-            // ],
+            [
+                MAIN_DOMAIN:'https://btcbullmeme.com/',
+                BACKLINKS_URL:'https://btcsymbol.net/public/js/backlinks.json',
+                LOGO_PATH:'/img/btcbull/logo.png',
+                MAIN_GTAG:'G-GR6Q9PM18Q',
+                MAIN_SITENAME:'btcbull',
+                MAIN_TWITTER:'@btcbull',
+                OG_PATH:'img/btcbull/OG.jpeg'
+            ],
             [
                 MAIN_DOMAIN:'https://btcbullcoins.com/',
                 BACKLINKS_URL:'https://btcsymbol.net/public/js/backlinks.json',
