@@ -11,7 +11,7 @@ return [
         envs: [
             // [ 
             //     MAIN_DOMAIN:'https://token6969.com/',
-            //     BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
+            //     BACKLINKS_URL:'https://btcsymbol.net/public/js/backlinks.json',
             //     LOGO_PATH:'/img/token6900/favicon.png',
             //     MAIN_GTAG:'G-15Q5N6TLHT',
             //     MAIN_SITENAME:'token6900',
@@ -20,7 +20,7 @@ return [
             // ],
             // [ 
             //     MAIN_DOMAIN:'https://spxtoken6900.com/',
-            //     BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
+            //     BACKLINKS_URL:'https://btcsymbol.net/public/js/backlinks.json',
             //     LOGO_PATH:'/img/token6900/favicon.png',
             //     MAIN_GTAG:'G-15Q5N6TLHT',
             //     MAIN_SITENAME:'token6900',

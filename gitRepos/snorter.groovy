@@ -11,7 +11,7 @@ return [
         envs: [
             // [ 
             //     MAIN_DOMAIN:'https://snorter.io/',
-            //     BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
+            //     BACKLINKS_URL:'https://btcsymbol.net/public/js/backlinks.json',
             //     LOGO_PATH:'/img/snorter/logo.png',
             //     MAIN_GTAG:'G-6FC2N1KBNH',
             //     MAIN_SITENAME:'snorter',
@@ -20,7 +20,7 @@ return [
             // ],
             // [ 
             //     MAIN_DOMAIN:'https://snortercoin.com/',
-            //     BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
+            //     BACKLINKS_URL:'https://btcsymbol.net/public/js/backlinks.json',
             //     LOGO_PATH:'/img/snorter/logo.png',
             //     MAIN_GTAG:'G-6FC2N1KBNH',
             //     MAIN_SITENAME:'snorter',

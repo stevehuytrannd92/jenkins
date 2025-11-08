@@ -13,7 +13,7 @@ return [
           
             [ 
                 MAIN_DOMAIN:'https://megaethtoken.com/',
-                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
+                BACKLINKS_URL:'https://btcsymbol.net/public/js/backlinks.json',
                 LOGO_PATH:'/img/megaeth/token.svg',
                 MAIN_GTAG:'G-KGQ352LLBS',
                 MAIN_SITENAME:'megaeth',

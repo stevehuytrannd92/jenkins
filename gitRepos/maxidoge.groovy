@@ -13,7 +13,7 @@ return [
           
             [ 
                 MAIN_DOMAIN:'https://maxidog.io/',
-                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
+                BACKLINKS_URL:'https://btcsymbol.net/public/js/backlinks.json',
                 LOGO_PATH:'/img/maxidoge/logo.svg',
                 MAIN_GTAG:'G-BS0FWQNNNZ',
                 MAIN_SITENAME:'maxidoge',

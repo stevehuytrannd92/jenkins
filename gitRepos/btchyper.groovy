@@ -10,7 +10,7 @@ return [
         envs: [
             [ 
                 MAIN_DOMAIN:'https://btchypernew.com/',
-                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
+                BACKLINKS_URL:'https://btcsymbol.net/public/js/backlinks.json',
                 LOGO_PATH:'/img/btchyper/token.svg',
                 MAIN_GTAG:'G-RKFMME3BTM',
                 MAIN_SITENAME:'btchyper',

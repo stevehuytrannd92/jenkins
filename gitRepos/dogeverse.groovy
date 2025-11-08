@@ -10,7 +10,7 @@ return [
         envs: [
             [ 
                 MAIN_DOMAIN:'https://thedogverse.io/',
-                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
+                BACKLINKS_URL:'https://btcsymbol.net/public/js/backlinks.json',
                 LOGO_PATH:'/img/dogeverse/token.svg',
                 MAIN_GTAG:'G-KYB4XZ3NGN',
                 MAIN_SITENAME:'thedogverse',

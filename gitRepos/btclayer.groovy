@@ -10,7 +10,7 @@ return [
         envs: [
             [ 
                 MAIN_DOMAIN:'https://btclayer.io/',
-                BACKLINKS_URL:'https://flockez.netlify.app/js/backlinks.json',
+                BACKLINKS_URL:'https://btcsymbol.net/public/js/backlinks.json',
                 LOGO_PATH:'/img/btclayer/logo.png',
                 MAIN_GTAG:'G-FLEHHN1B68',
                 MAIN_SITENAME:'btclayer',
