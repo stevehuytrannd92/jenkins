@@ -118,3 +118,10 @@ sudo certbot renew --dry-run
 sudo rm -rf /etc/letsencrypt/accounts/acme-v02.api.letsencrypt.org/directory/7d3a8b67d95da1c20959bc2b4a5f6f7b*
 
 
+
+
+
+sudo certbot certificates
+sudo certbot delete --cert-name thebtcbull.com
+sudo certbot delete --cert-name btcbullmeme.com
+sudo certbot delete --cert-name btcbullcoins.com
